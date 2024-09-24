@@ -4,18 +4,24 @@ import {
 	createRoutesFromElements,
 	Route,
 } from 'react-router-dom'
-import Login from './components/Login'
-import Dashboard from './pages/Dashboard' // Assuming you have a Dashboard page
 import { AuthProvider } from './context/AuthContext'
-import ProtectedRouteWrapper from './utils/ProtectedRouteWrapper'
-
-const ProtectedDashboard = ProtectedRouteWrapper(Dashboard)
+import ProtectedRoute from './components/ProtectedRoute'
+import Login from './pages/Login'
+import Layout from './components/Layout'
+import Users from './pages/Users'
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
-		<Route path="/" element={<Login />}>
-			<Route path="dashboard" element={<ProtectedDashboard />} />
-		</Route>
+		<>
+			{/* Public route for login */}
+			<Route path="/" element={<Login />} />
+
+			{/* Protected routes */}
+			<Route element={<ProtectedRoute />}>
+				<Route path="dashboard" element={<Layout />} />
+				<Route path="users" element={<Users />} />
+			</Route>
+		</>
 	)
 )
 
