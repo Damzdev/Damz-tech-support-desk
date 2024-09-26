@@ -1,6 +1,6 @@
 export default function TicketCard() {
 	return (
-		<div className="overflow-auto h-60 bg-gray-400 ml-10 w-60 rounded-lg flex flex-col relative">
+		<div className="overflow-auto h-60 bg-gray-400 ml-10 w-60 rounded-lg flex flex-col relative cursor-pointer">
 			<h3 className="p-5 text-lg font-bold">#100001</h3>
 			<p className="text-sm pl-5 pb-2 font-semibold text-[#49454F]">
 				From: user1@gmail.com

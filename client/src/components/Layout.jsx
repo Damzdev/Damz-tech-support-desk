@@ -94,9 +94,9 @@ export default function Layout() {
 							<span className="font-medium">{item.label}</span>
 						</div>
 					))}
-					<div className="flex items-center mt-8 p-2 cursor-pointer">
-						<img src={signOutIcon} alt="sign-out-icon" className="w-6 mr-3" />
-						<span className="font-medium text-[#FF2D55]">Sign Out</span>
+					<div className="flex items-center mt-8 p-2 cursor-pointer transform transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:scale-105">
+						<img src={signOutIcon} alt="sign-out-icon" className="w-6 mr-1" />
+						<span className="font-bold text-[#FF2D55]">Sign Out</span>
 					</div>
 				</nav>
 

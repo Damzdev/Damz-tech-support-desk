@@ -1,7 +1,7 @@
 export default function CustomCheckbox({ isChecked, onChange }) {
 	return (
 		<div
-			className={`w-6 h-6 border border-gray-500 rounded mr-4 cursor-pointer ${
+			className={`w-6 h-6 border border-gray-500 rounded mr-1 cursor-pointer ${
 				isChecked ? 'bg-gray-600' : 'bg-transparent'
 			}`}
 			onClick={onChange}

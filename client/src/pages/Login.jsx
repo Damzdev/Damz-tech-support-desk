@@ -28,21 +28,23 @@ export default function Login() {
 
 	return (
 		<div className="flex items-center justify-center min-h-screen bg-white">
-			<div className="flex flex-col items-center w-full max-w-[1200px] px-6">
+			<div className="flex flex-col items-center w-full max-w-[1000px] 2xl:max-w-[1200px] px-4 sm:px-6">
 				<img
 					src={logo}
 					alt="damztech-logo"
-					className="w-32 md:w-40 lg:w-48 h-auto mb-6"
+					className="w-24 sm:w-28 md:w-32 lg:w-36 2xl:w-48 h-auto mb-4 2xl:mb-6"
 				/>
-				<h1 className="text-4xl md:text-5xl font-bold mb-6 text-center">
+				<h1 className="text-2xl sm:text-3xl md:text-4xl 2xl:text-5xl font-bold mb-4 2xl:mb-6 text-center">
 					Support Desk
 				</h1>
-				<div className="w-full max-w-lg bg-gradient-to-b from-[#D9D9D9] to-[#737373] rounded-xl p-8 lg:p-12 flex flex-col items-center">
-					<h2 className="text-3xl md:text-4xl font-semibold mb-8 text-center">
+				<div className="w-full max-w-md 2xl:max-w-lg bg-gradient-to-b from-[#D9D9D9] to-[#737373] rounded-xl p-6 sm:p-8 2xl:p-12 flex flex-col items-center">
+					<h2 className="text-xl sm:text-2xl md:text-3xl 2xl:text-4xl font-semibold mb-6 2xl:mb-8 text-center">
 						Login
 					</h2>
-					<div className="w-full mb-6">
-						<h3 className="text-xl md:text-2xl mb-2">Email</h3>
+					<div className="w-full mb-4 2xl:mb-6">
+						<h3 className="text-base sm:text-lg md:text-xl 2xl:text-2xl mb-2">
+							Email
+						</h3>
 						<input
 							type="email"
 							name="email"
@@ -50,11 +52,13 @@ export default function Login() {
 							onChange={handleChange}
 							required
 							placeholder="admin@admin.com"
-							className="w-full h-12 md:h-16 bg-[rgba(217,217,217,0.4)] rounded-lg text-lg md:text-xl px-4"
+							className="w-full h-10 sm:h-12 md:h-14 2xl:h-16 bg-[rgba(217,217,217,0.4)] rounded-lg text-sm sm:text-base md:text-lg 2xl:text-xl px-4"
 						/>
 					</div>
-					<div className="w-full mb-6">
-						<h3 className="text-xl md:text-2xl mb-2">Password</h3>
+					<div className="w-full mb-4 2xl:mb-6">
+						<h3 className="text-base sm:text-lg md:text-xl 2xl:text-2xl mb-2">
+							Password
+						</h3>
 						<input
 							type="password"
 							name="password"
@@ -62,21 +66,23 @@ export default function Login() {
 							onChange={handleChange}
 							required
 							placeholder="*********************"
-							className="w-full h-12 md:h-16 bg-[rgba(217,217,217,0.4)] rounded-lg text-lg md:text-xl px-4"
+							className="w-full h-10 sm:h-12 md:h-14 2xl:h-16 bg-[rgba(217,217,217,0.4)] rounded-lg text-sm sm:text-base md:text-lg 2xl:text-xl px-4"
 						/>
 					</div>
 					{error && (
-						<p className="text-red-500 text-base md:text-lg mb-4">{error}</p>
+						<p className="text-red-500 text-xs sm:text-sm md:text-base 2xl:text-lg mb-4">
+							{error}
+						</p>
 					)}
-					<div className="w-full flex justify-between text-sm md:text-lg text-[#D9D9D9] mb-6">
+					<div className="w-full flex font-semibold justify-between text-xs sm:text-sm 2xl:text-lg text-[#D9D9D9] mb-4 2xl:mb-6">
 						<p>Forgot password?</p>
-						<a href="#" className="text-gray-200">
+						<a href="#" className="text-black font-semibold">
 							Reset password
 						</a>
 					</div>
 					<button
 						onClick={handleSubmit}
-						className="w-full h-12 md:h-16 bg-[#D9D9D9] text-lg md:text-xl font-bold rounded-lg"
+						className="w-full h-10 sm:h-12 md:h-14 2xl:h-16 bg-[#D9D9D9] hover:bg-[#C0C0C0] text-sm sm:text-base md:text-lg 2xl:text-xl font-bold rounded-lg"
 					>
 						Login
 					</button>
