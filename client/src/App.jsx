@@ -9,6 +9,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Layout from './components/Layout'
 import Users from './pages/Users'
+import ActivityTracker from './components/ActivityTracker'
+import InactivityWarning from './components/InactivityWarning'
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
@@ -25,12 +27,12 @@ const router = createBrowserRouter(
 	)
 )
 
-function App() {
+export default function App() {
 	return (
 		<AuthProvider>
+			<ActivityTracker />
 			<RouterProvider router={router} />
+			<InactivityWarning />
 		</AuthProvider>
 	)
 }
-
-export default App

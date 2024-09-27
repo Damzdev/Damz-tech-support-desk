@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import logo from '../assets/damztech-logo.svg'
 import homeIcon from '../assets/home-icon.svg'
 import usersIcon from '../assets/users-icon.svg'
@@ -18,6 +20,8 @@ import Settings from '../pages/Settings'
 
 export default function Layout() {
 	const [activeIndex, setActiveIndex] = useState(0)
+	const { logout, isAuthenticated } = useAuth()
+	const navigate = useNavigate()
 
 	const navItems = [
 		{ icon: homeIcon, label: 'Home' },
@@ -28,6 +32,21 @@ export default function Layout() {
 		{ icon: profileIcon, label: 'Profile' },
 		{ icon: settingsIcon, label: 'Settings' },
 	]
+
+	useEffect(() => {
+		if (!isAuthenticated) {
+			navigate('/')
+		}
+	}, [isAuthenticated, navigate])
+
+	const handleLogout = async () => {
+		try {
+			await logout()
+			navigate('/')
+		} catch (error) {
+			console.error('Logout failed:', error)
+		}
+	}
 
 	return (
 		<div className="flex flex-col h-screen overflow-hidden">
@@ -69,7 +88,7 @@ export default function Layout() {
 						</div>
 						<div className="w-10 h-10 md:w-12 md:h-12 bg-custom-gradient flex items-center justify-center rounded-full">
 							<span className="text-white text-lg md:text-xl font-semibold">
-								D
+								DO
 							</span>
 						</div>
 					</div>
@@ -77,7 +96,7 @@ export default function Layout() {
 			</header>
 
 			<div className="flex flex-grow">
-				<nav className="w-64 bg-white p-4 hidden md:block 2xl:w-80">
+				<nav className="w-[198px] bg-white p-4 hidden md:block 2xl:w-60">
 					{navItems.map((item, index) => (
 						<div
 							key={index}
@@ -94,7 +113,10 @@ export default function Layout() {
 							<span className="font-medium">{item.label}</span>
 						</div>
 					))}
-					<div className="flex items-center mt-8 p-2 cursor-pointer transform transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:scale-105">
+					<div
+						className="flex items-center mt-8 p-2 cursor-pointer transform transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:scale-105"
+						onClick={handleLogout}
+					>
 						<img src={signOutIcon} alt="sign-out-icon" className="w-6 mr-1" />
 						<span className="font-bold text-[#FF2D55]">Sign Out</span>
 					</div>

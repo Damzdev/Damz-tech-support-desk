@@ -64,7 +64,34 @@ const ticketData = [
 		requester: 'Hailey Matthews',
 		subject: 'Packaging issue',
 		agent: 'Damien',
-		status: 'Closed',
+		status: 'On Hold',
+		lastMessage: '10 days ago\nFrom Damien',
+		email: 'haileymatthews@gmail.com',
+	},
+	{
+		id: 8,
+		requester: 'Hailey Matthews',
+		subject: 'Packaging issue',
+		agent: 'Damien',
+		status: 'Resolved',
+		lastMessage: '10 days ago\nFrom Damien',
+		email: 'haileymatthews@gmail.com',
+	},
+	{
+		id: 9,
+		requester: 'Hailey Matthews',
+		subject: 'Packaging issue',
+		agent: 'Damien',
+		status: 'Resolved',
+		lastMessage: '10 days ago\nFrom Damien',
+		email: 'haileymatthews@gmail.com',
+	},
+	{
+		id: 10,
+		requester: 'Hailey Matthews',
+		subject: 'Packaging issue',
+		agent: 'Damien',
+		status: 'Resolved',
 		lastMessage: '10 days ago\nFrom Damien',
 		email: 'haileymatthews@gmail.com',
 	},
@@ -103,17 +130,17 @@ export default function Tickets() {
 	}
 
 	const handleSelectTicket = (id) => {
-		setSelectedTickets((prev) => ({
-			...prev,
-			[id]: !prev[id],
-		}))
-		// Update selectAll state based on whether all tickets are selected
-		setSelectAll(
-			Object.values({ ...selectedTickets, [id]: !selectedTickets[id] }).every(
-				Boolean
+		setSelectedTickets((prev) => {
+			const newSelectedTickets = { ...prev, [id]: !prev[id] }
+			const allSelected = ticketData.every(
+				(ticket) => newSelectedTickets[ticket.id]
 			)
-		)
+			setSelectAll(allSelected)
+
+			return newSelectedTickets
+		})
 	}
+
 	return (
 		<div className="flex bg-[#0066FF] bg-opacity-15 rounded-tl-lg h-full max-h-[calc(100vh-100px)] overflow-auto">
 			{/* Sidebar */}
@@ -149,30 +176,27 @@ export default function Tickets() {
 
 			{/* Main content */}
 			<div className="flex-1 overflow-auto">
-				<div className="flex justify-between items-center p-5 pb-4 mb-4 border-b border-[#999999] border-opacity-50">
-					<h1 className="font-semibold text-2xl">All tickets</h1>
-				</div>
-				<table className="w-full">
+				<table className="w-full mt-[23px]">
 					<thead>
 						<tr className="text-left text-gray-500 text-sm">
-							<th className="pb-2 font-normal pl-6">
+							<th className="pb-4 font-normal pl-6">
 								<CustomCheckbox
 									isChecked={selectAll}
 									onChange={handleSelectAll}
 								/>
 							</th>
-							<th className="pb-2 font-bold text-lg pl-1">Requester</th>
-							<th className="pb-2 font-bold text-lg">Subject</th>
-							<th className="pb-2 font-bold text-lg">Agent</th>
-							<th className="pb-2 font-bold text-lg">Status</th>
-							<th className="pb-2 font-bold text-lg">Last Message</th>
+							<th className="pb-4 font-bold text-lg pl-1">Requester</th>
+							<th className="pb-4 font-bold text-lg">Subject</th>
+							<th className="pb-4 font-bold text-lg">Agent</th>
+							<th className="pb-4 font-bold text-lg">Status</th>
+							<th className="pb-4 font-bold text-lg">Last Message</th>
 						</tr>
 					</thead>
 					<tbody>
 						{ticketData.map((ticket) => (
 							<tr
 								key={ticket.id}
-								className="border-t border-[#999999] border-opacity-50 shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+								className="border-t border-[#999999] border-opacity-50 shadow-md hover:bg-[#0066FF] hover:bg-opacity-15 cursor-pointer"
 							>
 								<td className="py-03 pl-6">
 									<CustomCheckbox
@@ -225,10 +249,10 @@ export default function Tickets() {
 					</span>
 					<div className="flex items-center">
 						<span className="text-[#999999] font-semibold mr-2">
-							1-8 of 100
+							1-10 of 100
 						</span>
 						<button className="text-[#999999] font-semibold w-8 h-4 px-1 border border-[#999999] hover:bg-user-button-blue rounded-sm flex items-center justify-between">
-							<span>8</span>
+							<span>10</span>
 							<img src={chevron} alt="chevron" className="w-1.5 h-1.5" />
 						</button>
 					</div>

@@ -8,87 +8,127 @@ import roleIcon from '../assets/users/roleIcon.svg'
 import chevron from '../assets/users/chevron.svg'
 import doubleleftarrow from '../assets/users/left-double-arrow.svg'
 import leftarrow from '../assets/users/left-arrow.svg'
+import address from '../assets/orders/Address.svg'
 
 export default function Orders() {
 	const [selectAll, setSelectAll] = useState(false)
-	const [selectedUsers, setSelectedUsers] = useState({})
+	const [selectedOrders, setSelectedOrders] = useState({})
+	const [expandedAddresses, setExpandedAddresses] = useState({})
 
-	const users = [
+	const orders = [
 		{
-			name: 'Damien Oosthuizen',
+			address: '2040 Octave St, Roodepoort, Gauteng, 2040',
 			email: 'damien@example.com',
-			role: 'Admin',
-			joinedDate: '06 Sep 2024, 8:30 am',
+			orderNumber: '#420135',
+			customerName: 'Damien Keev',
+			orderDate: '06 Sep 2024, 8:30 am',
 		},
 		{
-			name: 'James Hall',
+			address: '10 Lois Avenue, Pretoria, Gauteng, 0084',
 			email: 'james@example.com',
-			role: 'Senior Support',
-			joinedDate: '05 Sep 2024, 9:15 am',
+			orderNumber: '#420136',
+			customerName: 'James Hall',
+			orderDate: '06 Sep 2024, 8:31 am',
 		},
 		{
-			name: 'Noah Black',
+			address: '320 The Hillside St, Pretoria, Gauteng, 0102',
 			email: 'noah@example.com',
-			role: 'Junior Support',
-			joinedDate: '04 Sep 2024, 10:00 am',
+			orderNumber: '#420137',
+			customerName: 'Noah Black',
+			orderDate: '06 Sep 2024, 8:32 am',
 		},
 		{
-			name: 'Ava Brown',
+			address: 'Spaanschemat River Rd, Cape Town, Western Cape, 0142',
 			email: 'ava@example.com',
-			role: 'Product Manager',
-			joinedDate: '03 Sep 2024, 11:30 am',
+			orderNumber: '#420138',
+			customerName: 'Ava Brown',
+			orderDate: '06 Sep 2024, 8:33 am',
 		},
 		{
-			name: 'Sophie Jones',
+			address: '1 Rose Street, Durban, KwaZulu-Natal, 4001',
 			email: 'sophie@example.com',
-			role: 'Product Manager',
-			joinedDate: '02 Sep 2024, 1:45 pm',
+			orderNumber: '#420139',
+			customerName: 'Sophie Jones',
+			orderDate: '06 Sep 2024, 8:34 am',
 		},
 		{
-			name: 'Lucas Young',
+			address: 'Longmarket St, Cape Town, Western Cape, 0175',
 			email: 'lucas@example.com',
-			role: 'Admin',
-			joinedDate: '01 Sep 2024, 3:00 pm',
+			orderNumber: '#420140',
+			customerName: 'Lucas Young',
+			orderDate: '06 Sep 2024, 8:35 am',
 		},
 		{
-			name: 'Dylan Holder',
+			address: 'Rhinoceros Rd, Roodepoort, Gauteng, 0186',
 			email: 'dylan@example.com',
-			role: 'Senior Support',
-			joinedDate: '31 Aug 2024, 4:30 pm',
+			orderNumber: '#420141',
+			customerName: 'Dylan Holder',
+			orderDate: '06 Sep 2024, 8:50 am',
 		},
 		{
-			name: 'Brent Evans',
+			address: '17 Liesbeeck St, Pretoria, Gauteng, 0645',
 			email: 'brent@example.com',
-			role: 'Junior Support',
-			joinedDate: '30 Aug 2024, 5:45 pm',
+			orderNumber: '#420142',
+			customerName: 'Brent Evans',
+			orderDate: '06 Sep 2024, 9:14 am',
+		},
+		{
+			address: '27 Clough St, Pietermaritzburg, KwaZulu-Natal, 3201',
+			email: 'damien@example.com',
+			orderNumber: '#420143',
+			customerName: 'Damien Keev',
+			orderDate: '07 Sep 2024, 8:38 am',
+		},
+		{
+			address: '35 Gardenia St, Bloemfontein, Free State, 9301',
+			email: 'kelly@example.com',
+			orderNumber: '#420144',
+			customerName: 'Kelly Smith',
+			orderDate: '07 Sep 2024, 8:50 am',
+		},
+		{
+			address: '2040 Octave St, Roodepoort, Gauteng, 2040',
+			email: 'damien@example.com',
+			orderNumber: '#420145',
+			customerName: 'Damien Keev',
+			orderDate: '08 Sep 2024, 8:30 am',
 		},
 	]
 
-	const handleSelectAll = () => {
-		const newSelectAll = !selectAll
-		setSelectAll(newSelectAll)
-		const newSelectedUsers = {}
-		users.forEach((user, index) => {
-			newSelectedUsers[index] = newSelectAll
-		})
-		setSelectedUsers(newSelectedUsers)
-	}
-
-	const handleSelectUser = (index) => {
-		setSelectedUsers((prev) => ({
+	const toggleAddress = (index) => {
+		setExpandedAddresses((prev) => ({
 			...prev,
 			[index]: !prev[index],
 		}))
 	}
 
+	const truncateAddress = (address, maxLength = 10) => {
+		return address.length > maxLength
+			? `${address.substring(0, maxLength)}...`
+			: address
+	}
+
+	const handleSelectAll = () => {
+		const newSelectAll = !selectAll
+		setSelectAll(newSelectAll)
+		const newSelectedOrders = {}
+		orders.forEach((_, index) => {
+			newSelectedOrders[index] = newSelectAll
+		})
+		setSelectedOrders(newSelectedOrders)
+	}
+
+	const handleSelectOrder = (index) => {
+		setSelectedOrders((prev) => {
+			const newSelectedOrders = { ...prev, [index]: !prev[index] }
+			const allSelected = orders.every((_, i) => newSelectedOrders[i] === true)
+			setSelectAll(allSelected)
+			return newSelectedOrders
+		})
+	}
+
 	return (
 		<div className="bg-black rounded-tl-lg h-full p-2 sm:p-4 lg:p-6 max-h-[calc(100vh-100px)] overflow-auto">
-			<div className="flex mb-4 pr-10">
-				<button className="text-white text-lg font-semibold w-40 p-1.5 ml-auto border border-[#999999] hover:bg-user-button-blue rounded-lg flex items-center justify-evenly">
-					<span>Add User</span>
-					<img src={chevron} alt="chevron" className="w-4 h-4" />
-				</button>
-			</div>
 			<table className="w-full border-collapse">
 				<thead>
 					<tr className="border-b border-t border-[#999999]">
@@ -105,20 +145,26 @@ export default function Orders() {
 						</th>
 						<th className="px-2 sm:px-3 lg:px-4 py-2 text-left border-r border-[#999999]">
 							<span className="text-sm sm:text-base lg:text-xl 2xl:text-2xl font-semibold text-[#999999] flex items-center">
+								<img src={address} alt="address" className="w-5 h-5 mr-2" />
+								Address
+							</span>
+						</th>
+						<th className="px-2 sm:px-3 lg:px-4 py-2 text-left border-r border-[#999999]">
+							<span className="text-sm sm:text-base lg:text-xl 2xl:text-2xl font-semibold text-[#999999] flex items-center">
 								<img src={aticon} alt="atIcon" className="w-5 h-5 mr-2" />
 								Email
 							</span>
 						</th>
 						<th className="px-2 sm:px-3 lg:px-4 py-2 text-left border-r border-[#999999]">
-							<span className="text-sm sm:text-base lg:text-xl 2xl:text-2xl font-semibold text-[#999999] flex items-center">
+							<span className="text-sm sm:text-base lg:text-xl 2xl:text-2xl font-semibold text-[#999999] flex items-center w-28">
 								<img src={roleIcon} alt="atIcon" className="w-7 h-7" />
-								Role
+								Order #
 							</span>
 						</th>
 						<th className="px-2 sm:px-3 lg:px-4 py-2 text-left hidden sm:table-cell border-r border-[#999999]">
 							<span className="text-sm sm:text-base lg:text-xl 2xl:text-2xl font-semibold text-[#999999] flex items-center">
 								<img src={calendar} alt="atIcon" className="w-5 h-5 mr-2" />
-								Joined Date
+								Order Date
 							</span>
 						</th>
 						<th className="px-2 sm:px-3 lg:px-4 py-2 text-left">
@@ -129,32 +175,45 @@ export default function Orders() {
 					</tr>
 				</thead>
 				<tbody>
-					{users.map((user, index) => (
+					{orders.map((orders, index) => (
 						<tr key={index} className="border-b border-[#999999]">
 							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
 								<div className="flex items-center">
 									<CustomCheckbox
-										isChecked={selectedUsers[index] || false}
-										onChange={() => handleSelectUser(index)}
+										isChecked={selectedOrders[index] || false}
+										onChange={() => handleSelectOrder(index)}
 									/>
 									<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl font-semibold text-gray-300 ml-2">
-										{user.name}
+										{orders.customerName}
 									</span>
 								</div>
 							</td>
+							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r lg:max-w-32 2xl:max-w-max border-[#999999]">
+								<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl text-[#999999] underline decoration-1 underline-offset-4">
+									{expandedAddresses[index]
+										? orders.address
+										: truncateAddress(orders.address)}
+								</span>
+								<button
+									onClick={() => toggleAddress(index)}
+									className="ml-2 text-xs sm:text-sm text-blue-500 hover:text-blue-400"
+								>
+									{expandedAddresses[index] ? 'Show less' : 'Show more'}
+								</button>
+							</td>
 							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
 								<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl text-[#999999] underline decoration-1 underline-offset-4">
-									{user.email}
+									{orders.email}
 								</span>
 							</td>
 							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
 								<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl text-gray-300 font-semibold">
-									{user.role}
+									{orders.orderNumber}
 								</span>
 							</td>
 							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 hidden sm:table-cell border-r border-[#999999]">
 								<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl text-gray-300 font-semibold">
-									{user.joinedDate}
+									{orders.orderDate}
 								</span>
 							</td>
 							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4">
@@ -187,10 +246,10 @@ export default function Orders() {
 				</span>
 				<div className="flex">
 					<span className="text-[#999999] font-semibold mr-4">
-						1-8 of 100 rows
+						1-10 of 100 rows
 					</span>
 					<button className="text-[#999999] font-semibold w-12 h-6 px-1.5 border border-[#999999] hover:bg-user-button-blue rounded-md flex items-center justify-evenly">
-						<span className="text-xs mr-auto">8</span>
+						<span className="text-xs mr-auto">10</span>
 						<img src={chevron} alt="chevron" className="w-2 h-2" />
 					</button>
 				</div>

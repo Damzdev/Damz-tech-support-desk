@@ -29,14 +29,14 @@ router.post('/login', async (req, res) => {
 		const token = jwt.sign(
 			{ userId: userDoc.id, email: userData.email },
 			process.env.JWT_SECRET,
-			{ expiresIn: '1h' }
+			{ expiresIn: '24h' }
 		)
 
 		// Set token in HTTP-only cookie
 		res.cookie('secureLogin', token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-			maxAge: 3600000, // 1 hour in milliseconds
+			maxAge: 24 * 60 * 60 * 1000, // 30 min in milliseconds
 		})
 
 		res.status(200).json({
@@ -89,7 +89,11 @@ router.get('/check-auth', (req, res) => {
 
 	try {
 		jwt.verify(token, process.env.JWT_SECRET)
-		res.json({ isAuthenticated: true })
+		res.json({
+			isAuthenticated: true,
+			sessionDuration: 30 * 60,
+			warningThreshold: 5 * 60,
+		})
 	} catch (error) {
 		res.json({ isAuthenticated: false })
 	}

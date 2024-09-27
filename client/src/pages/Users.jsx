@@ -15,51 +15,73 @@ export default function Users() {
 
 	const users = [
 		{
+			Id: 1,
 			name: 'Damien Oosthuizen',
 			email: 'damien@example.com',
 			role: 'Admin',
 			joinedDate: '06 Sep 2024, 8:30 am',
 		},
 		{
+			Id: 2,
 			name: 'James Hall',
 			email: 'james@example.com',
 			role: 'Senior Support',
 			joinedDate: '05 Sep 2024, 9:15 am',
 		},
 		{
+			Id: 3,
 			name: 'Noah Black',
 			email: 'noah@example.com',
 			role: 'Junior Support',
 			joinedDate: '04 Sep 2024, 10:00 am',
 		},
 		{
+			Id: 4,
 			name: 'Ava Brown',
 			email: 'ava@example.com',
 			role: 'Product Manager',
 			joinedDate: '03 Sep 2024, 11:30 am',
 		},
 		{
+			Id: 5,
 			name: 'Sophie Jones',
 			email: 'sophie@example.com',
 			role: 'Product Manager',
 			joinedDate: '02 Sep 2024, 1:45 pm',
 		},
 		{
+			Id: 6,
 			name: 'Lucas Young',
 			email: 'lucas@example.com',
 			role: 'Admin',
 			joinedDate: '01 Sep 2024, 3:00 pm',
 		},
 		{
+			Id: 7,
 			name: 'Dylan Holder',
 			email: 'dylan@example.com',
 			role: 'Senior Support',
 			joinedDate: '31 Aug 2024, 4:30 pm',
 		},
 		{
-			name: 'Brent Evans',
-			email: 'brent@example.com',
+			Id: 8,
+			name: 'Kevin Evans',
+			email: 'Kevin@example.com',
 			role: 'Junior Support',
+			joinedDate: '30 Aug 2024, 5:45 pm',
+		},
+		{
+			Id: 9,
+			name: 'Shuan Evans',
+			email: 'Shuan@example.com',
+			role: 'Junior Support',
+			joinedDate: '30 Aug 2024, 5:45 pm',
+		},
+		{
+			Id: 10,
+			name: 'Judy Evans',
+			email: 'Judy@example.com',
+			role: 'Senior Support',
 			joinedDate: '30 Aug 2024, 5:45 pm',
 		},
 	]
@@ -187,10 +209,10 @@ export default function Users() {
 				</span>
 				<div className="flex">
 					<span className="text-[#999999] font-semibold mr-4">
-						1-8 of 100 rows
+						1-10 of 100 rows
 					</span>
 					<button className="text-[#999999] font-semibold w-12 h-6 px-1.5 border border-[#999999] hover:bg-user-button-blue rounded-md flex items-center justify-evenly">
-						<span className="text-xs mr-auto">8</span>
+						<span className="text-xs mr-auto">10</span>
 						<img src={chevron} alt="chevron" className="w-2 h-2" />
 					</button>
 				</div>
