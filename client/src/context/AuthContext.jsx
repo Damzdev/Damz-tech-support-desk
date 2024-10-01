@@ -12,7 +12,7 @@ const AuthContext = createContext()
 export const AuthProvider = ({ children }) => {
 	const [isAuthenticated, setIsAuthenticated] = useState(false)
 	const [isLoading, setIsLoading] = useState(true)
-	const [timeRemaining, setTimeRemaining] = useState(60)
+	const [timeRemaining, setTimeRemaining] = useState(0)
 	const [isWarningActive, setIsWarningActive] = useState(false)
 	const logoutTimerRef = useRef()
 	const warningTimerRef = useRef()
@@ -20,10 +20,14 @@ export const AuthProvider = ({ children }) => {
 	useEffect(() => {
 		checkAuthStatus()
 		return () => {
-			if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current)
-			if (warningTimerRef.current) clearInterval(warningTimerRef.current)
+			clearTimers()
 		}
 	}, [])
+
+	const clearTimers = () => {
+		if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current)
+		if (warningTimerRef.current) clearInterval(warningTimerRef.current)
+	}
 
 	const checkAuthStatus = async () => {
 		try {
@@ -33,10 +37,17 @@ export const AuthProvider = ({ children }) => {
 			setIsAuthenticated(response.data.isAuthenticated)
 			if (response.data.isAuthenticated) {
 				resetLogoutTimer()
+			} else {
+				clearTimers()
+				setTimeRemaining(0)
+				setIsWarningActive(false)
 			}
 		} catch (error) {
 			console.error('Auth check failed:', error)
 			setIsAuthenticated(false)
+			clearTimers()
+			setTimeRemaining(0)
+			setIsWarningActive(false)
 		} finally {
 			setIsLoading(false)
 		}
@@ -65,19 +76,20 @@ export const AuthProvider = ({ children }) => {
 				{},
 				{ withCredentials: true }
 			)
-			setIsAuthenticated(false)
-			setIsWarningActive(false)
-			if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current)
 		} catch (error) {
 			console.error('Logout failed:', error)
+		} finally {
+			setIsAuthenticated(false)
+			clearTimers()
+			setTimeRemaining(0)
+			setIsWarningActive(false)
 		}
 	}
 
 	const resetLogoutTimer = () => {
-		if (isWarningActive) return
+		if (!isAuthenticated) return
 
-		if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current)
-		if (warningTimerRef.current) clearInterval(warningTimerRef.current)
+		clearTimers()
 
 		const totalTime = 10 * 60
 		const warningTime = 60
@@ -86,7 +98,9 @@ export const AuthProvider = ({ children }) => {
 		setIsWarningActive(false)
 
 		logoutTimerRef.current = setTimeout(() => {
-			logout()
+			if (isAuthenticated) {
+				logout()
+			}
 		}, totalTime * 1000)
 
 		warningTimerRef.current = setInterval(() => {
@@ -104,8 +118,10 @@ export const AuthProvider = ({ children }) => {
 	}
 
 	const extendSession = () => {
-		setIsWarningActive(false)
-		resetLogoutTimer()
+		if (isAuthenticated) {
+			setIsWarningActive(false)
+			resetLogoutTimer()
+		}
 	}
 
 	const value = {

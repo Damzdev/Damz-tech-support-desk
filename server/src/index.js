@@ -5,6 +5,7 @@ const session = require('express-session')
 const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 const dbRoutes = require('./routes/firestoreRoutes')
+const ticketRoutes = require('./routes/tickets')
 
 dotenv.config()
 
@@ -21,7 +22,7 @@ app.use(
 )
 app.use(express.json())
 
-app.use('/api', dbRoutes)
+app.use('/api', dbRoutes, ticketRoutes)
 
 app.get('/', (req, res) => {
 	res.send('Support Help Desk API is running')

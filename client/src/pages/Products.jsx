@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import trashIcon from '../assets/users/trashIcon.svg'
 import editIcon from '../assets/users/pencilIcon.svg'
 import CustomCheckbox from '../components/CustomCheckbox'
@@ -13,6 +13,7 @@ import address from '../assets/orders/Address.svg'
 export default function Products() {
 	const [selectAll, setSelectAll] = useState(false)
 	const [selectedProducts, setSelectedProducts] = useState({})
+	const [searchTerm, setSearchTerm] = useState('')
 
 	const products = [
 		{
@@ -87,6 +88,12 @@ export default function Products() {
 		},
 	]
 
+	const filteredProducts = useMemo(() => {
+		return products.filter((product) =>
+			product.name.toLowerCase().includes(searchTerm.toLowerCase())
+		)
+	}, [searchTerm, products])
+
 	const handleSelectAll = () => {
 		const newSelectAll = !selectAll
 		setSelectAll(newSelectAll)
@@ -113,6 +120,15 @@ export default function Products() {
 
 	return (
 		<div className="bg-black rounded-tl-lg h-full p-2 sm:p-4 lg:p-6 max-h-[calc(100vh-100px)] overflow-auto">
+			<div className="mb-4">
+				<input
+					type="text"
+					placeholder="Search products..."
+					value={searchTerm}
+					onChange={(e) => setSearchTerm(e.target.value)}
+					className="px-4 py-2 bg-[#999999] text-white placeholder-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+				/>
+			</div>
 			<table className="w-full border-collapse">
 				<thead>
 					<tr className="border-b border-t border-[#999999]">
@@ -159,65 +175,73 @@ export default function Products() {
 					</tr>
 				</thead>
 				<tbody>
-					{products.map((product, index) => (
-						<tr key={index} className="border-b border-[#999999]">
-							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
-								<div className="flex items-center">
-									<CustomCheckbox
-										isChecked={selectedProducts[index] || false}
-										onChange={() => handleSelectProduct(index)}
-									/>
-									<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl font-semibold text-gray-300 ml-2">
-										{product.name}
+					{filteredProducts.length > 0 ? (
+						filteredProducts.map((product, index) => (
+							<tr key={index} className="border-b border-[#999999]">
+								<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
+									<div className="flex items-center">
+										<CustomCheckbox
+											isChecked={selectedProducts[index] || false}
+											onChange={() => handleSelectProduct(index)}
+										/>
+										<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl font-semibold text-gray-300 ml-2">
+											{product.name}
+										</span>
+									</div>
+								</td>
+								<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r lg:max-w-52 2xl:max-w-max border-[#999999]">
+									<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl text-[#999999]">
+										R {product.price}
 									</span>
-								</div>
-							</td>
-							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r lg:max-w-52 2xl:max-w-max border-[#999999]">
-								<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl text-[#999999]">
-									R {product.price}
-								</span>
-							</td>
-							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
-								<span
-									className={`text-xs sm:text-sm lg:text-base 2xl:text-xl  ${
-										product.stock === 0 ? 'text-red-500' : 'text-[#999999]'
-									}`}
-								>
-									{product.stock}
-								</span>
-							</td>
-							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
-								<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl text-gray-300 font-semibold">
-									{product.productId}
-								</span>
-							</td>
-							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 hidden sm:table-cell border-r border-[#999999]">
-								<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl text-gray-300 font-semibold">
-									{product.entryDate}
-								</span>
-							</td>
-							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4">
-								<div className="flex items-center">
-									<button className="bg-user-button-blue bg-opacity-20 text-gray-400 px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded-lg mr-1 sm:mr-2 flex items-center font-semibold text-xs sm:text-sm lg:text-base">
-										<img
-											src={editIcon}
-											alt="Edit"
-											className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mr-1 sm:mr-2"
-										/>
-										Edit
-									</button>
-									<button className="bg-user-button-blue bg-opacity-20 text-gray-400 px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded-lg flex items-center font-semibold text-xs sm:text-sm lg:text-base">
-										<img
-											src={trashIcon}
-											alt="Delete"
-											className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mr-1 sm:mr-2"
-										/>
-										Delete
-									</button>
-								</div>
+								</td>
+								<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
+									<span
+										className={`text-xs sm:text-sm lg:text-base 2xl:text-xl  ${
+											product.stock === 0 ? 'text-red-500' : 'text-[#999999]'
+										}`}
+									>
+										{product.stock}
+									</span>
+								</td>
+								<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
+									<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl text-gray-300 font-semibold">
+										{product.productId}
+									</span>
+								</td>
+								<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 hidden sm:table-cell border-r border-[#999999]">
+									<span className="text-xs sm:text-sm lg:text-base 2xl:text-xl text-gray-300 font-semibold">
+										{product.entryDate}
+									</span>
+								</td>
+								<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4">
+									<div className="flex items-center">
+										<button className="bg-user-button-blue bg-opacity-20 text-gray-400 px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded-lg mr-1 sm:mr-2 flex items-center font-semibold text-xs sm:text-sm lg:text-base">
+											<img
+												src={editIcon}
+												alt="Edit"
+												className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mr-1 sm:mr-2"
+											/>
+											Edit
+										</button>
+										<button className="bg-user-button-blue bg-opacity-20 text-gray-400 px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded-lg flex items-center font-semibold text-xs sm:text-sm lg:text-base">
+											<img
+												src={trashIcon}
+												alt="Delete"
+												className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mr-1 sm:mr-2"
+											/>
+											Delete
+										</button>
+									</div>
+								</td>
+							</tr>
+						))
+					) : (
+						<tr>
+							<td colSpan="6" className="pl-4 py-4">
+								<span className="text-white text-lg whitespace-pre-line">{`No results found,\nplease try again!`}</span>
 							</td>
 						</tr>
-					))}
+					)}
 				</tbody>
 			</table>
 			<div className="my-4 flex">

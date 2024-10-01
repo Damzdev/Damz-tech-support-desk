@@ -1,101 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import CustomCheckbox from '../components/CustomCheckbox'
-import chevron from '../assets/users/chevron.svg'
-import doubleleftarrow from '../assets/users/left-double-arrow.svg'
-import leftarrow from '../assets/users/left-arrow.svg'
-
-const ticketData = [
-	{
-		id: 1,
-		requester: 'Jason Baker',
-		subject: 'Order #324321',
-		agent: 'Unassigned',
-		status: 'Open',
-		lastMessage: '4 seconds ago\nFrom Jason',
-		email: 'jasonbaker@company.com',
-	},
-	{
-		id: 2,
-		requester: 'Hailey Matthews',
-		subject: 'Packaging issue',
-		agent: 'Damien',
-		status: 'Resolved',
-		lastMessage: '31 minutes ago\nFrom Damien',
-		email: 'haileymatthews@gmail.com',
-	},
-	{
-		id: 3,
-		requester: 'Hailey Matthews',
-		subject: 'Packaging issue',
-		agent: 'Damien',
-		status: 'Closed',
-		lastMessage: '5 hours ago\nFrom Damien',
-		email: 'haileymatthews@gmail.com',
-	},
-	{
-		id: 4,
-		requester: 'Hailey Matthews',
-		subject: 'Packaging issue',
-		agent: 'Damien',
-		status: 'On Hold',
-		lastMessage: '2 days ago\nFrom Damien',
-		email: 'haileymatthews@gmail.com',
-	},
-	{
-		id: 5,
-		requester: 'Hailey Matthews',
-		subject: 'Packaging issue',
-		agent: 'Damien',
-		status: 'Resolved',
-		lastMessage: '3 days ago\nFrom Damien',
-		email: 'haileymatthews@gmail.com',
-	},
-	{
-		id: 6,
-		requester: 'Hailey Matthews',
-		subject: 'Packaging issue',
-		agent: 'Damien',
-		status: 'On Hold',
-		lastMessage: '5 days ago\nFrom Damien',
-		email: 'haileymatthews@gmail.com',
-	},
-	{
-		id: 7,
-		requester: 'Hailey Matthews',
-		subject: 'Packaging issue',
-		agent: 'Damien',
-		status: 'On Hold',
-		lastMessage: '10 days ago\nFrom Damien',
-		email: 'haileymatthews@gmail.com',
-	},
-	{
-		id: 8,
-		requester: 'Hailey Matthews',
-		subject: 'Packaging issue',
-		agent: 'Damien',
-		status: 'Resolved',
-		lastMessage: '10 days ago\nFrom Damien',
-		email: 'haileymatthews@gmail.com',
-	},
-	{
-		id: 9,
-		requester: 'Hailey Matthews',
-		subject: 'Packaging issue',
-		agent: 'Damien',
-		status: 'Resolved',
-		lastMessage: '10 days ago\nFrom Damien',
-		email: 'haileymatthews@gmail.com',
-	},
-	{
-		id: 10,
-		requester: 'Hailey Matthews',
-		subject: 'Packaging issue',
-		agent: 'Damien',
-		status: 'Resolved',
-		lastMessage: '10 days ago\nFrom Damien',
-		email: 'haileymatthews@gmail.com',
-	},
-]
+import Pagination from '../components/Pagination'
 
 const statusColors = {
 	Open: 'bg-[#174CD6]',
@@ -118,12 +23,130 @@ const sidebarItems = [
 export default function Tickets() {
 	const [selectAll, setSelectAll] = useState(false)
 	const [selectedTickets, setSelectedTickets] = useState({})
+	const [tickets, setTickets] = useState([])
+	const [filteredTickets, setFilteredTickets] = useState([])
+	const [currentFilter, setCurrentFilter] = useState('All tickets')
+	const [currentPage, setCurrentPage] = useState(1)
+	const [itemsPerPage, setItemsPerPage] = useState(10)
+	const ticketsCache = useRef(null)
+
+	const fetchTickets = useCallback(async () => {
+		try {
+			const response = await fetch('http://localhost:5000/api/tickets')
+			if (!response.ok) {
+				throw new Error('Network response was not ok')
+			}
+			const data = await response.json()
+			const sortedTickets = data.sort((a, b) => {
+				const timeA = parseTime(a.lastMessage)
+				const timeB = parseTime(b.lastMessage)
+				return timeB - timeA // Sort from latest to earliest
+			})
+
+			// Update the cache
+			ticketsCache.current = sortedTickets
+			localStorage.setItem('cachedTickets', JSON.stringify(sortedTickets))
+
+			setTickets(sortedTickets)
+			setFilteredTickets(sortedTickets)
+		} catch (error) {
+			console.log(`Could not fetch tickets: ${error}`)
+		}
+	}, [])
+
+	useEffect(() => {
+		// Try to load cached data first
+		const cachedData = localStorage.getItem('cachedTickets')
+		if (cachedData) {
+			const parsedData = JSON.parse(cachedData)
+			ticketsCache.current = parsedData
+			setTickets(parsedData)
+			setFilteredTickets(parsedData)
+		}
+
+		// Fetch fresh data
+		fetchTickets()
+
+		// Set up an interval to fetch tickets every 5 minutes
+		const intervalId = setInterval(() => {
+			fetchTickets()
+		}, 5 * 60 * 1000) // 5 minutes in milliseconds
+
+		// Clean up the interval when the component unmounts
+		return () => clearInterval(intervalId)
+	}, [fetchTickets])
+
+	useEffect(() => {
+		filterTickets(currentFilter)
+	}, [tickets, currentFilter])
+
+	const filterTickets = (filter) => {
+		let filtered = []
+		// Use the cached data if available, otherwise use the state
+		const ticketsToFilter = ticketsCache.current || tickets
+
+		switch (filter) {
+			case 'All tickets':
+				filtered = ticketsToFilter
+				break
+			case 'Unassigned tickets':
+				filtered = ticketsToFilter.filter(
+					(ticket) => ticket.agent === 'Unassigned'
+				)
+				break
+			case 'My open tickets':
+				filtered = ticketsToFilter.filter(
+					(ticket) => ticket.agent === 'Damien' && ticket.status === 'Open'
+				)
+				break
+			case 'Open':
+				filtered = ticketsToFilter.filter((ticket) => ticket.status === 'Open')
+				break
+			case 'On Hold':
+				filtered = ticketsToFilter.filter(
+					(ticket) => ticket.status === 'On Hold'
+				)
+				break
+			case 'Resolved':
+				filtered = ticketsToFilter.filter(
+					(ticket) => ticket.status === 'Resolved'
+				)
+				break
+			case 'Closed':
+				filtered = ticketsToFilter.filter(
+					(ticket) => ticket.status === 'Closed'
+				)
+				break
+			case 'Spam':
+				filtered = ticketsToFilter.filter((ticket) => ticket.status === 'Spam')
+				break
+			default:
+				filtered = ticketsToFilter
+		}
+		setFilteredTickets(filtered)
+	}
+
+	const parseTime = (message) => {
+		const timeValue = message.match(/\d+/)[0]
+		const timeUnit = message.match(/(seconds|minutes|hours|days)/)[0]
+		const now = new Date()
+		if (timeUnit === 'seconds') {
+			return now - timeValue * 1000
+		} else if (timeUnit === 'minutes') {
+			return now - timeValue * 60 * 1000
+		} else if (timeUnit === 'hours') {
+			return now - timeValue * 60 * 60 * 1000
+		} else if (timeUnit === 'days') {
+			return now - timeValue * 24 * 60 * 60 * 1000
+		}
+		return now
+	}
 
 	const handleSelectAll = () => {
 		const newSelectAll = !selectAll
 		setSelectAll(newSelectAll)
 		const newSelectedTickets = {}
-		ticketData.forEach((ticket) => {
+		tickets.forEach((ticket) => {
 			newSelectedTickets[ticket.id] = newSelectAll
 		})
 		setSelectedTickets(newSelectedTickets)
@@ -132,13 +155,19 @@ export default function Tickets() {
 	const handleSelectTicket = (id) => {
 		setSelectedTickets((prev) => {
 			const newSelectedTickets = { ...prev, [id]: !prev[id] }
-			const allSelected = ticketData.every(
+			const allSelected = tickets.every(
 				(ticket) => newSelectedTickets[ticket.id]
 			)
 			setSelectAll(allSelected)
 
 			return newSelectedTickets
 		})
+	}
+
+	const getCurrentPageItems = () => {
+		const indexOfLastItem = currentPage * itemsPerPage
+		const indexOfFirstItem = indexOfLastItem - itemsPerPage
+		return filteredTickets.slice(indexOfFirstItem, indexOfLastItem)
 	}
 
 	return (
@@ -159,10 +188,11 @@ export default function Tickets() {
 							)}
 							<div
 								className={`cursor-pointer font-semibold text-[#999999] p-2 rounded ${
-									index === 0
+									item === currentFilter
 										? 'bg-blue-100 text-blue-600'
 										: 'hover:text-blue-600'
 								}`}
+								onClick={() => setCurrentFilter(item)}
 							>
 								{item}
 							</div>
@@ -193,7 +223,7 @@ export default function Tickets() {
 						</tr>
 					</thead>
 					<tbody>
-						{ticketData.map((ticket) => (
+						{getCurrentPageItems().map((ticket) => (
 							<tr
 								key={ticket.id}
 								className="border-t border-[#999999] border-opacity-50 shadow-md hover:bg-[#0066FF] hover:bg-opacity-15 cursor-pointer"
@@ -243,56 +273,13 @@ export default function Tickets() {
 						))}
 					</tbody>
 				</table>
-				<div className="py-8 pb-12 px-8 flex text-xs items-center">
-					<span className="text-[#999999] font-semibold mr-6">
-						Rows per page
-					</span>
-					<div className="flex items-center">
-						<span className="text-[#999999] font-semibold mr-2">
-							1-10 of 100
-						</span>
-						<button className="text-[#999999] font-semibold w-8 h-4 px-1 border border-[#999999] hover:bg-user-button-blue rounded-sm flex items-center justify-between">
-							<span>10</span>
-							<img src={chevron} alt="chevron" className="w-1.5 h-1.5" />
-						</button>
-					</div>
-					<div className="ml-auto flex items-center">
-						<button className="text-[#999999] w-5 h-5 mx-1 border border-[#999999] hover:bg-user-button-blue rounded-sm flex items-center justify-center">
-							<img
-								src={doubleleftarrow}
-								alt="doubleleftarrow"
-								className="w-3 h-3"
-							/>
-						</button>
-						<button className="text-[#999999] w-5 h-5 border border-[#999999] hover:bg-user-button-blue rounded-sm flex items-center justify-center">
-							<img src={leftarrow} alt="leftarrow" className="w-3 h-3" />
-						</button>
-						<button className="text-[#999999] hover:text-white mx-2 font-semibold">
-							1
-						</button>
-						<button className="text-white font-semibold">2</button>
-						<button className="text-[#999999] mx-2 hover:text-white font-semibold">
-							...
-						</button>
-						<button className="text-[#999999] hover:text-white font-semibold mr-1">
-							5
-						</button>
-						<button className="text-[#999999] w-5 h-5 mx-1 border border-[#999999] hover:bg-user-button-blue rounded-sm flex items-center justify-center">
-							<img
-								src={leftarrow}
-								alt="rightarrow"
-								className="w-3 h-3 transform -scale-x-100"
-							/>
-						</button>
-						<button className="text-[#999999] w-5 h-5 border border-[#999999] hover:bg-user-button-blue rounded-sm flex items-center justify-center">
-							<img
-								src={doubleleftarrow}
-								alt="doublerightarrow"
-								className="w-3 h-3 transform -scale-x-100"
-							/>
-						</button>
-					</div>
-				</div>
+				<Pagination
+					totalItems={filteredTickets.length}
+					itemsPerPage={itemsPerPage}
+					currentPage={currentPage}
+					onPageChange={setCurrentPage}
+					onItemsPerPageChange={setItemsPerPage}
+				/>
 			</div>
 		</div>
 	)
