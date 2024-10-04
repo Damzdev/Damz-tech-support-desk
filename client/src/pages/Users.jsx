@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import Pagination from '../components/Pagination'
 import trashIcon from '../assets/users/trashIcon.svg'
 import editIcon from '../assets/users/pencilIcon.svg'
 import CustomCheckbox from '../components/CustomCheckbox'
@@ -6,85 +7,122 @@ import aticon from '../assets/users/atSign.svg'
 import calendar from '../assets/users/calendar.svg'
 import roleIcon from '../assets/users/roleIcon.svg'
 import chevron from '../assets/users/chevron.svg'
-import doubleleftarrow from '../assets/users/left-double-arrow.svg'
-import leftarrow from '../assets/users/left-arrow.svg'
+import UserModal from '../components/userModal'
+
+const modalStyle = {
+	position: 'absolute',
+	top: '50%',
+	left: '50%',
+	transform: 'translate(-50%, -50%)',
+	width: 400,
+	bgcolor: 'background.paper',
+	border: '2px solid #000',
+	boxShadow: 24,
+	p: 4,
+}
 
 export default function Users() {
 	const [selectAll, setSelectAll] = useState(false)
 	const [selectedUsers, setSelectedUsers] = useState({})
+	const [users, setUsers] = useState([])
+	const [currentPage, setCurrentPage] = useState(1)
+	const [itemsPerPage, setItemsPerPage] = useState(10)
+	const [modalType, setModalType] = useState(null)
+	const [modalUser, setModalUser] = useState(null)
 
-	const users = [
-		{
-			Id: 1,
-			name: 'Damien Oosthuizen',
-			email: 'damien@example.com',
-			role: 'Admin',
-			joinedDate: '06 Sep 2024, 8:30 am',
-		},
-		{
-			Id: 2,
-			name: 'James Hall',
-			email: 'james@example.com',
-			role: 'Senior Support',
-			joinedDate: '05 Sep 2024, 9:15 am',
-		},
-		{
-			Id: 3,
-			name: 'Noah Black',
-			email: 'noah@example.com',
-			role: 'Junior Support',
-			joinedDate: '04 Sep 2024, 10:00 am',
-		},
-		{
-			Id: 4,
-			name: 'Ava Brown',
-			email: 'ava@example.com',
-			role: 'Product Manager',
-			joinedDate: '03 Sep 2024, 11:30 am',
-		},
-		{
-			Id: 5,
-			name: 'Sophie Jones',
-			email: 'sophie@example.com',
-			role: 'Product Manager',
-			joinedDate: '02 Sep 2024, 1:45 pm',
-		},
-		{
-			Id: 6,
-			name: 'Lucas Young',
-			email: 'lucas@example.com',
-			role: 'Admin',
-			joinedDate: '01 Sep 2024, 3:00 pm',
-		},
-		{
-			Id: 7,
-			name: 'Dylan Holder',
-			email: 'dylan@example.com',
-			role: 'Senior Support',
-			joinedDate: '31 Aug 2024, 4:30 pm',
-		},
-		{
-			Id: 8,
-			name: 'Kevin Evans',
-			email: 'Kevin@example.com',
-			role: 'Junior Support',
-			joinedDate: '30 Aug 2024, 5:45 pm',
-		},
-		{
-			Id: 9,
-			name: 'Shuan Evans',
-			email: 'Shuan@example.com',
-			role: 'Junior Support',
-			joinedDate: '30 Aug 2024, 5:45 pm',
-		},
-		{
-			Id: 10,
-			name: 'Judy Evans',
-			email: 'Judy@example.com',
-			role: 'Senior Support',
-			joinedDate: '30 Aug 2024, 5:45 pm',
-		},
-	]
+	const openModal = (type, user = null) => {
+		setModalType(type)
+		setModalUser(user || { name: '', email: '', password: '', role: '' })
+	}
+
+	const closeModal = () => {
+		setModalType(null)
+		setModalUser(null)
+	}
+
+	const handleSave = async (user) => {
+		if (modalType === 'add') {
+			await handleAddUser(user)
+		} else if (modalType === 'edit') {
+			await handleUpdateUser(user)
+		}
+		closeModal()
+		fetchUsers()
+	}
+
+	const fetchUsers = async () => {
+		try {
+			const response = await fetch('http://localhost:5000/api/users')
+			if (response.ok) {
+				const data = await response.json()
+				setUsers(data)
+			}
+		} catch (error) {
+			console.error('Error fetching users:', error)
+		}
+	}
+
+	useEffect(() => {
+		fetchUsers()
+	}, [])
+
+	const handleAddUser = async (user) => {
+		try {
+			const response = await fetch('http://localhost:5000/api/add-user', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					...user,
+					joinDate: new Date().toISOString(),
+				}),
+			})
+
+			if (response.ok) {
+				fetchUsers()
+			}
+		} catch (error) {
+			console.error('Error adding user:', error)
+		}
+	}
+
+	const handleUpdateUser = async (updatedUser) => {
+		try {
+			const response = await fetch(
+				`http://localhost:5000/api/update-user/${updatedUser.id}`,
+				{
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(updatedUser),
+				}
+			)
+			if (response.ok) {
+				console.log('User updated successfully')
+			}
+		} catch (error) {
+			console.error('Error updating user:', error)
+		}
+	}
+
+	const handleDeleteUser = async () => {
+		try {
+			const response = await fetch(
+				`http://localhost:5000/api/delete-user/${modalUser.id}`,
+				{
+					method: 'DELETE',
+				}
+			)
+			if (response.ok) {
+				closeModal()
+				fetchUsers()
+			}
+		} catch (error) {
+			console.error('Error deleting user:', error)
+		}
+	}
 
 	const handleSelectAll = () => {
 		const newSelectAll = !selectAll
@@ -103,10 +141,19 @@ export default function Users() {
 		}))
 	}
 
+	const getCurrentPageItems = () => {
+		const indexOfLastItem = currentPage * itemsPerPage
+		const indexOfFirstItem = indexOfLastItem - itemsPerPage
+		return users.slice(indexOfFirstItem, indexOfLastItem)
+	}
+
 	return (
 		<div className="bg-black rounded-tl-lg h-full p-2 sm:p-4 lg:p-6 max-h-[calc(100vh-100px)] overflow-auto">
 			<div className="flex mb-4 pr-10">
-				<button className="text-white text-lg font-semibold w-40 p-1.5 ml-auto border border-[#999999] hover:bg-user-button-blue rounded-lg flex items-center justify-evenly">
+				<button
+					onClick={() => openModal('add')}
+					className="text-white text-lg font-semibold w-40 p-1.5 ml-auto border border-[#999999] hover:bg-user-button-blue rounded-lg flex items-center justify-evenly"
+				>
 					<span>Add User</span>
 					<img src={chevron} alt="chevron" className="w-4 h-4" />
 				</button>
@@ -151,7 +198,7 @@ export default function Users() {
 					</tr>
 				</thead>
 				<tbody>
-					{users.map((user, index) => (
+					{getCurrentPageItems().map((user, index) => (
 						<tr key={index} className="border-b border-[#999999]">
 							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
 								<div className="flex items-center">
@@ -181,7 +228,10 @@ export default function Users() {
 							</td>
 							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4">
 								<div className="flex items-center">
-									<button className="bg-user-button-blue bg-opacity-20 text-gray-400 px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded-lg mr-1 sm:mr-2 flex items-center font-semibold text-xs sm:text-sm lg:text-base">
+									<button
+										onClick={() => openModal('edit', user)}
+										className="bg-user-button-blue bg-opacity-20 text-gray-400 px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded-lg mr-1 sm:mr-2 flex items-center font-semibold text-xs sm:text-sm lg:text-base"
+									>
 										<img
 											src={editIcon}
 											alt="Edit"
@@ -189,7 +239,10 @@ export default function Users() {
 										/>
 										Edit
 									</button>
-									<button className="bg-user-button-blue bg-opacity-20 text-gray-400 px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded-lg flex items-center font-semibold text-xs sm:text-sm lg:text-base">
+									<button
+										onClick={() => openModal('delete', user)}
+										className="bg-user-button-blue bg-opacity-20 text-gray-400 px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded-lg flex items-center font-semibold text-xs sm:text-sm lg:text-base"
+									>
 										<img
 											src={trashIcon}
 											alt="Delete"
@@ -203,52 +256,21 @@ export default function Users() {
 					))}
 				</tbody>
 			</table>
-			<div className="my-4 flex">
-				<span className="text-[#999999] font-semibold mr-20">
-					Rows per page
-				</span>
-				<div className="flex">
-					<span className="text-[#999999] font-semibold mr-4">
-						1-10 of 100 rows
-					</span>
-					<button className="text-[#999999] font-semibold w-12 h-6 px-1.5 border border-[#999999] hover:bg-user-button-blue rounded-md flex items-center justify-evenly">
-						<span className="text-xs mr-auto">10</span>
-						<img src={chevron} alt="chevron" className="w-2 h-2" />
-					</button>
-				</div>
-				<div className="ml-auto flex">
-					<button className="text-[#999999] font-semibold w-7 h-7 mx-2 px-1.5 border border-[#999999] hover:bg-user-button-blue rounded-md flex items-center justify-evenly">
-						<img src={doubleleftarrow} alt="doubleleftarrow" />
-					</button>
-					<button className="text-[#999999] font-semibold w-7 h-7 px-1.5 border border-[#999999] hover:bg-user-button-blue rounded-md flex items-center justify-evenly">
-						<img src={leftarrow} alt="leftarrow" />
-					</button>
-					<button className="text-[#999999] hover:text-white mx-4 font-semibold text-lg">
-						1
-					</button>
-					<button className="text-white font-semibold text-lg">2</button>
-					<button className="text-[#999999] mx-4 hover:text-white font-semibold text-lg">
-						...
-					</button>
-					<button className="text-[#999999] hover:text-white font-semibold text-lg mr-2">
-						5
-					</button>
-					<button className="text-[#999999] font-semibold w-7 h-7 mx-2 px-1.5 border border-[#999999] hover:bg-user-button-blue rounded-md flex items-center justify-evenly">
-						<img
-							src={leftarrow}
-							alt="rightarrow"
-							className="transform -scale-x-100"
-						/>
-					</button>
-					<button className="text-[#999999] font-semibold w-7 h-7 px-1.5 border border-[#999999] hover:bg-user-button-blue rounded-md flex items-center justify-evenly">
-						<img
-							src={doubleleftarrow}
-							alt="doublerightarrow"
-							className="transform -scale-x-100"
-						/>
-					</button>
-				</div>
-			</div>
+			<Pagination
+				totalItems={users.length}
+				itemsPerPage={itemsPerPage}
+				currentPage={currentPage}
+				onPageChange={setCurrentPage}
+				onItemsPerPageChange={setItemsPerPage}
+			/>
+			<UserModal
+				isOpen={modalType !== null}
+				onClose={closeModal}
+				modalType={modalType}
+				user={modalUser}
+				onSave={handleSave}
+				onDelete={handleDeleteUser}
+			/>
 		</div>
 	)
 }

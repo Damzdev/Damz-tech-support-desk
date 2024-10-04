@@ -2,13 +2,15 @@ import { useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 
 export default function ActivityTracker() {
-	const { resetLogoutTimer } = useAuth()
+	const { resetLogoutTimer, isWarningActive } = useAuth()
 
 	useEffect(() => {
 		const events = ['mousedown', 'keydown', 'scroll', 'mousemove']
 
 		const resetTimer = () => {
-			resetLogoutTimer()
+			if (!isWarningActive) {
+				resetLogoutTimer()
+			}
 		}
 
 		events.forEach((event) => {
@@ -20,7 +22,7 @@ export default function ActivityTracker() {
 				window.removeEventListener(event, resetTimer)
 			})
 		}
-	}, [resetLogoutTimer])
+	}, [resetLogoutTimer, isWarningActive])
 
 	return null
 }

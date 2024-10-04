@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
+import useCurrentUser from '../hooks/useCurrentUser'
 import CustomCheckbox from '../components/CustomCheckbox'
 import Pagination from '../components/Pagination'
 
@@ -24,6 +25,7 @@ export default function Tickets() {
 	const [selectAll, setSelectAll] = useState(false)
 	const [selectedTickets, setSelectedTickets] = useState({})
 	const [tickets, setTickets] = useState([])
+	const { currentUser, loading, error } = useCurrentUser()
 	const [filteredTickets, setFilteredTickets] = useState([])
 	const [currentFilter, setCurrentFilter] = useState('All tickets')
 	const [currentPage, setCurrentPage] = useState(1)
@@ -84,6 +86,7 @@ export default function Tickets() {
 		let filtered = []
 		// Use the cached data if available, otherwise use the state
 		const ticketsToFilter = ticketsCache.current || tickets
+		const currentUserFirstName = currentUser?.name.split(' ')[0]
 
 		switch (filter) {
 			case 'All tickets':
@@ -96,7 +99,9 @@ export default function Tickets() {
 				break
 			case 'My open tickets':
 				filtered = ticketsToFilter.filter(
-					(ticket) => ticket.agent === 'Damien' && ticket.status === 'Open'
+					(ticket) =>
+						ticket.agent.split(' ')[0] === currentUserFirstName &&
+						ticket.status === 'Open'
 				)
 				break
 			case 'Open':
