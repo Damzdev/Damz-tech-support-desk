@@ -8,12 +8,20 @@ const useCurrentUser = () => {
 	useEffect(() => {
 		const fetchCurrentUser = async () => {
 			try {
+				const cachedUser = localStorage.getItem('currentUser')
+				if (cachedUser) {
+					setCurrentUser(JSON.parse(cachedUser))
+					setLoading(false)
+					return
+				}
+
 				const response = await fetch('http://localhost:5000/api/current-user', {
 					credentials: 'include',
 				})
 				if (response.ok) {
 					const userData = await response.json()
 					setCurrentUser(userData)
+					localStorage.setItem('currentUser', JSON.stringify(userData))
 				} else {
 					setError('Failed to fetch user data')
 				}

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import SearchBar from '../components/SearchBar'
 import trashIcon from '../assets/users/trashIcon.svg'
 import editIcon from '../assets/users/pencilIcon.svg'
 import CustomCheckbox from '../components/CustomCheckbox'
@@ -121,12 +122,10 @@ export default function Products() {
 	return (
 		<div className="bg-black rounded-tl-lg h-full p-2 sm:p-4 lg:p-6 max-h-[calc(100vh-100px)] overflow-auto">
 			<div className="mb-4">
-				<input
-					type="text"
+				<SearchBar
+					searchTerm={searchTerm}
+					setSearchTerm={setSearchTerm}
 					placeholder="Search products..."
-					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
-					className="px-4 py-2 bg-[#999999] text-white placeholder-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 				/>
 			</div>
 			<table className="w-full border-collapse">

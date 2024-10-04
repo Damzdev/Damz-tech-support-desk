@@ -102,6 +102,31 @@ const UserModal = ({ isOpen, onClose, modalType, user, onSave, onDelete }) => {
 								'.MuiOutlinedInput-notchedOutline': {
 									borderColor: '#999999',
 								},
+								'& .MuiSelect-icon': {
+									color: '#FFFFFF',
+								},
+								'& .MuiPaper-root': {
+									backgroundColor: '#333333',
+								},
+							}}
+							MenuProps={{
+								PaperProps: {
+									sx: {
+										bgcolor: '#333333',
+										'& .MuiMenuItem-root': {
+											color: '#FFFFFF',
+											'&:hover': {
+												backgroundColor: '#4A4A4A',
+											},
+											'&.Mui-selected': {
+												backgroundColor: '#4A4A4A',
+												'&:hover': {
+													backgroundColor: '#5A5A5A',
+												},
+											},
+										},
+									},
+								},
 							}}
 						>
 							<MenuItem value="">Select Role</MenuItem>

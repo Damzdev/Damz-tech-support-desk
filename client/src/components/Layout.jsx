@@ -94,9 +94,8 @@ export default function Layout() {
 					</div>
 				</div>
 			</header>
-
 			<div className="flex flex-grow">
-				<nav className="w-[198px] bg-white p-4 hidden md:block 2xl:w-60">
+				<nav className="w-32 md:w-40 lg:w-48 xl:w-52 2xl:w-54 flex-shrink-0 bg-white p-4 hidden md:block">
 					{navItems.map((item, index) => (
 						<div
 							key={index}
@@ -122,7 +121,7 @@ export default function Layout() {
 					</div>
 				</nav>
 
-				<main className="flex-grow">
+				<main className="flex-grow overflow-auto">
 					{activeIndex === 0 && <Dashboard />}
 					{activeIndex === 1 && <Users />}
 					{activeIndex === 2 && <Tickets />}

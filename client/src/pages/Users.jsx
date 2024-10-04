@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
+import SearchBar from '../components/SearchBar'
 import Pagination from '../components/Pagination'
 import trashIcon from '../assets/users/trashIcon.svg'
 import editIcon from '../assets/users/pencilIcon.svg'
@@ -9,18 +10,6 @@ import roleIcon from '../assets/users/roleIcon.svg'
 import chevron from '../assets/users/chevron.svg'
 import UserModal from '../components/userModal'
 
-const modalStyle = {
-	position: 'absolute',
-	top: '50%',
-	left: '50%',
-	transform: 'translate(-50%, -50%)',
-	width: 400,
-	bgcolor: 'background.paper',
-	border: '2px solid #000',
-	boxShadow: 24,
-	p: 4,
-}
-
 export default function Users() {
 	const [selectAll, setSelectAll] = useState(false)
 	const [selectedUsers, setSelectedUsers] = useState({})
@@ -29,6 +18,7 @@ export default function Users() {
 	const [itemsPerPage, setItemsPerPage] = useState(10)
 	const [modalType, setModalType] = useState(null)
 	const [modalUser, setModalUser] = useState(null)
+	const [searchTerm, setSearchTerm] = useState('')
 
 	const openModal = (type, user = null) => {
 		setModalType(type)
@@ -50,21 +40,27 @@ export default function Users() {
 		fetchUsers()
 	}
 
+	useEffect(() => {
+		const cachedUsers = localStorage.getItem('cachedUsers')
+		if (cachedUsers) {
+			setUsers(JSON.parse(cachedUsers))
+		} else {
+			fetchUsers()
+		}
+	}, [])
+
 	const fetchUsers = async () => {
 		try {
 			const response = await fetch('http://localhost:5000/api/users')
 			if (response.ok) {
 				const data = await response.json()
 				setUsers(data)
+				localStorage.setItem('cachedUsers', JSON.stringify(data))
 			}
 		} catch (error) {
 			console.error('Error fetching users:', error)
 		}
 	}
-
-	useEffect(() => {
-		fetchUsers()
-	}, [])
 
 	const handleAddUser = async (user) => {
 		try {
@@ -141,15 +137,29 @@ export default function Users() {
 		}))
 	}
 
-	const getCurrentPageItems = () => {
+	const filteredUsers = useMemo(() => {
+		return users.filter(
+			(user) =>
+				user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				user.role.toLowerCase().includes(searchTerm.toLowerCase())
+		)
+	}, [searchTerm, users])
+
+	const getCurrentPageItems = (items) => {
 		const indexOfLastItem = currentPage * itemsPerPage
 		const indexOfFirstItem = indexOfLastItem - itemsPerPage
-		return users.slice(indexOfFirstItem, indexOfLastItem)
+		return items.slice(indexOfFirstItem, indexOfLastItem)
 	}
 
 	return (
 		<div className="bg-black rounded-tl-lg h-full p-2 sm:p-4 lg:p-6 max-h-[calc(100vh-100px)] overflow-auto">
 			<div className="flex mb-4 pr-10">
+				<SearchBar
+					searchTerm={searchTerm}
+					setSearchTerm={setSearchTerm}
+					placeholder="Search users..."
+				/>
 				<button
 					onClick={() => openModal('add')}
 					className="text-white text-lg font-semibold w-40 p-1.5 ml-auto border border-[#999999] hover:bg-user-button-blue rounded-lg flex items-center justify-evenly"
@@ -198,7 +208,7 @@ export default function Users() {
 					</tr>
 				</thead>
 				<tbody>
-					{getCurrentPageItems().map((user, index) => (
+					{getCurrentPageItems(filteredUsers).map((user, index) => (
 						<tr key={index} className="border-b border-[#999999]">
 							<td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-r border-[#999999]">
 								<div className="flex items-center">
@@ -257,7 +267,7 @@ export default function Users() {
 				</tbody>
 			</table>
 			<Pagination
-				totalItems={users.length}
+				totalItems={filteredUsers.length}
 				itemsPerPage={itemsPerPage}
 				currentPage={currentPage}
 				onPageChange={setCurrentPage}
