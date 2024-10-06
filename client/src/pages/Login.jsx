@@ -1,13 +1,21 @@
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import logo from '../assets/damztech-logo.svg'
 import { useAuth } from '../context/AuthContext'
+import { CircularProgress } from '@mui/material'
+import useCurrentUser from '../hooks/useCurrentUser'
 
 export default function Login() {
 	const [inputs, setInputs] = useState({ email: '', password: '' })
 	const [error, setError] = useState('')
+	const { login, isLoginLoading, isAuthenticated } = useAuth()
 	const navigate = useNavigate()
-	const { login } = useAuth()
+	const {
+		currentUser,
+		loading,
+		error: userError,
+		refetchUser,
+	} = useCurrentUser()
 
 	const handleChange = (e) => {
 		setInputs({
@@ -20,11 +28,18 @@ export default function Login() {
 		e.preventDefault()
 		try {
 			await login(inputs.email, inputs.password)
-			navigate('/dashboard')
+			await refetchUser()
+			navigate('/home')
 		} catch (err) {
 			setError(err.response?.data?.message || 'Login failed. Please try again.')
 		}
 	}
+
+	useEffect(() => {
+		if (isAuthenticated) {
+			navigate('/home')
+		}
+	}, [isAuthenticated, navigate])
 
 	return (
 		<div className="flex items-center justify-center min-h-screen bg-white">
@@ -52,7 +67,7 @@ export default function Login() {
 							onChange={handleChange}
 							required
 							placeholder="admin@admin.com"
-							className="w-full h-10 sm:h-12 md:h-14 2xl:h-16 bg-[rgba(217,217,217,0.4)] rounded-lg text-sm sm:text-base md:text-lg 2xl:text-xl px-4"
+							className="w-full h-10 sm:h-12 md:h-14 2xl:h-16 bg-white rounded-lg text-sm sm:text-base md:text-lg 2xl:text-xl px-4"
 						/>
 					</div>
 					<div className="w-full mb-4 2xl:mb-6">
@@ -66,7 +81,7 @@ export default function Login() {
 							onChange={handleChange}
 							required
 							placeholder="*********************"
-							className="w-full h-10 sm:h-12 md:h-14 2xl:h-16 bg-[rgba(217,217,217,0.4)] rounded-lg text-sm sm:text-base md:text-lg 2xl:text-xl px-4"
+							className="w-full h-10 sm:h-12 md:h-14 2xl:h-16 bg-white rounded-lg text-sm sm:text-base md:text-lg 2xl:text-xl px-4"
 						/>
 					</div>
 					{error && (
@@ -82,9 +97,14 @@ export default function Login() {
 					</div>
 					<button
 						onClick={handleSubmit}
-						className="w-full h-10 sm:h-12 md:h-14 2xl:h-16 bg-[#D9D9D9] hover:bg-[#C0C0C0] text-sm sm:text-base md:text-lg 2xl:text-xl font-bold rounded-lg"
+						disabled={isLoginLoading}
+						className="w-full h-10 sm:h-12 md:h-14 2xl:h-16 bg-[#D9D9D9] hover:bg-[#C0C0C0] text-sm sm:text-base md:text-lg 2xl:text-xl font-bold rounded-lg flex items-center justify-center"
 					>
-						Login
+						{isLoginLoading ? (
+							<CircularProgress size={24} color="inherit" />
+						) : (
+							'Login'
+						)}
 					</button>
 				</div>
 			</div>

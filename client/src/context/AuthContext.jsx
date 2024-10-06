@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
 	const [isLoading, setIsLoading] = useState(true)
 	const [timeRemaining, setTimeRemaining] = useState(0)
 	const [isWarningActive, setIsWarningActive] = useState(false)
+	const [isLoginLoading, setIsLoginLoading] = useState(false)
 	const logoutTimerRef = useRef()
 	const warningTimerRef = useRef()
 
@@ -54,7 +55,9 @@ export const AuthProvider = ({ children }) => {
 	}
 
 	const login = async (email, password) => {
+		setIsLoginLoading(true)
 		try {
+			await new Promise((resolve) => setTimeout(resolve, 2000))
 			const response = await axios.post(
 				'http://localhost:5000/api/login',
 				{ email, password },
@@ -66,6 +69,8 @@ export const AuthProvider = ({ children }) => {
 		} catch (error) {
 			console.error('Login failed:', error)
 			throw error
+		} finally {
+			setIsLoginLoading(false)
 		}
 	}
 
@@ -127,6 +132,7 @@ export const AuthProvider = ({ children }) => {
 	const value = {
 		isAuthenticated,
 		isLoading,
+		isLoginLoading,
 		login,
 		logout,
 		resetLogoutTimer,
@@ -134,7 +140,6 @@ export const AuthProvider = ({ children }) => {
 		timeRemaining,
 		isWarningActive,
 	}
-
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Outlet, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import logo from '../assets/damztech-logo.svg'
 import homeIcon from '../assets/home-icon.svg'
@@ -10,17 +10,11 @@ import productsIcon from '../assets/products-icon.svg'
 import profileIcon from '../assets/profile-icon.svg'
 import settingsIcon from '../assets/settings-icon.svg'
 import signOutIcon from '../assets/sign-out-icon.svg'
-import Dashboard from '../pages/Dashboard'
-import Users from '../pages/Users'
-import Tickets from '../pages/Tickets'
-import Orders from '../pages/Orders'
-import Products from '../pages/Products'
-import Profile from '../pages/Profile'
-import Settings from '../pages/Settings'
+import useCurrentUser from '../hooks/useCurrentUser'
 
 export default function Layout() {
-	const [activeIndex, setActiveIndex] = useState(0)
 	const { logout, isAuthenticated } = useAuth()
+	const { currentUser, loading, error } = useCurrentUser()
 	const navigate = useNavigate()
 
 	const navItems = [
@@ -35,14 +29,14 @@ export default function Layout() {
 
 	useEffect(() => {
 		if (!isAuthenticated) {
-			navigate('/')
+			navigate('/login')
 		}
 	}, [isAuthenticated, navigate])
 
 	const handleLogout = async () => {
 		try {
 			await logout()
-			navigate('/')
+			navigate('/login')
 		} catch (error) {
 			console.error('Logout failed:', error)
 		}
@@ -88,7 +82,12 @@ export default function Layout() {
 						</div>
 						<div className="w-10 h-10 md:w-12 md:h-12 bg-custom-gradient flex items-center justify-center rounded-full">
 							<span className="text-white text-lg md:text-xl font-semibold">
-								DO
+								{currentUser
+									? currentUser.name
+											.split(' ')
+											.map((n) => n[0])
+											.join('')
+									: 'G'}
 							</span>
 						</div>
 					</div>
@@ -97,12 +96,14 @@ export default function Layout() {
 			<div className="flex flex-grow">
 				<nav className="w-32 md:w-40 lg:w-48 xl:w-52 2xl:w-54 flex-shrink-0 bg-white p-4 hidden md:block">
 					{navItems.map((item, index) => (
-						<div
+						<NavLink
 							key={index}
-							onClick={() => setActiveIndex(index)}
-							className={`flex items-center p-2 rounded-lg cursor-pointer mb-2 ${
-								activeIndex === index ? 'bg-[#D9D9D9]' : 'hover:bg-[#D9D9D9]'
-							}`}
+							to={`/${item.label.toLowerCase()}`}
+							className={({ isActive }) =>
+								`flex items-center p-2 rounded-lg cursor-pointer mb-2 ${
+									isActive ? 'bg-[#D9D9D9]' : 'hover:bg-[#D9D9D9]'
+								}`
+							}
 						>
 							<img
 								src={item.icon}
@@ -110,7 +111,7 @@ export default function Layout() {
 								className="w-6 mr-3"
 							/>
 							<span className="font-medium">{item.label}</span>
-						</div>
+						</NavLink>
 					))}
 					<div
 						className="flex items-center mt-8 p-2 cursor-pointer transform transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:scale-105"
@@ -122,13 +123,7 @@ export default function Layout() {
 				</nav>
 
 				<main className="flex-grow overflow-auto">
-					{activeIndex === 0 && <Dashboard />}
-					{activeIndex === 1 && <Users />}
-					{activeIndex === 2 && <Tickets />}
-					{activeIndex === 3 && <Orders />}
-					{activeIndex === 4 && <Products />}
-					{activeIndex === 5 && <Profile />}
-					{activeIndex === 6 && <Settings />}
+					<Outlet />
 				</main>
 			</div>
 		</div>

@@ -16,4 +16,26 @@ router.get('/tickets', async (req, res) => {
 	}
 })
 
+router.get('/tickets/:id/messages', async (req, res) => {
+	try {
+		const ticketId = req.params.id
+		const messagesSnapshot = await db
+			.collection('ticketMessages')
+			.where('ticketId', '==', ticketId)
+			.get()
+
+		const messages = messagesSnapshot.docs.map((doc) => ({
+			id: doc.id,
+			...doc.data(),
+		}))
+
+		res.status(200).json(messages)
+	} catch (err) {
+		console.error('Error fetching ticket messages from Firestore:', err)
+		res
+			.status(500)
+			.send({ success: false, message: 'Failed to fetch ticket messages' })
+	}
+})
+
 module.exports = router

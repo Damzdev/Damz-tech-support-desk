@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import useCurrentUser from '../hooks/useCurrentUser'
 import TicketCard from '../components/TicketCard'
 
 export default function Dashboard() {
 	const { currentUser, loading, error } = useCurrentUser()
 	const [recentTickets, setRecentTickets] = useState([])
+	const navigate = useNavigate()
 
 	useEffect(() => {
 		const fetchRecentTickets = async () => {
@@ -36,6 +38,10 @@ export default function Dashboard() {
 		fetchRecentTickets()
 	}, [])
 
+	const handleTicketClick = (ticketId) => {
+		navigate(`/tickets?selectedTicket=${ticketId}`)
+	}
+
 	return (
 		<div className="bg-custom-gradient-dashboard rounded-tl-lg h-full p-6 overflow-auto max-h-[calc(100vh-100px)]">
 			<h1 className="text-white font-bold text-3xl md:text-4xl lg:text-5xl mb-4">
@@ -47,7 +53,11 @@ export default function Dashboard() {
 			</h3>
 			<div className="flex flex-wrap">
 				{recentTickets.map((ticket) => (
-					<TicketCard key={ticket.id} ticket={ticket} />
+					<TicketCard
+						key={ticket.id}
+						ticket={ticket}
+						onClick={() => handleTicketClick(ticket.id)}
+					/>
 				))}
 			</div>
 		</div>

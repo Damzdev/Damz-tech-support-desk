@@ -169,6 +169,22 @@ router.get('/users', async (req, res) => {
 	}
 })
 
+router.get('/customers', async (req, res) => {
+	try {
+		const customersSnapshot = await db.collection('users').get()
+		const customers = customersSnapshot.docs.map((doc) => ({
+			id: doc.id,
+			...doc.data(),
+		}))
+		res.status(200).json(customers)
+	} catch (error) {
+		console.error('Error fetching customers from Firestore:', error)
+		res
+			.status(500)
+			.send({ success: false, message: 'Failed to fetch customers' })
+	}
+})
+
 router.get('/check-auth', (req, res) => {
 	const token = req.cookies.secureLogin
 
