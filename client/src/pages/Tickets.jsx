@@ -28,6 +28,7 @@ export default function Tickets() {
 	const [selectedTickets, setSelectedTickets] = useState({})
 	const [selectedTicket, setSelectedTicket] = useState(null)
 	const [tickets, setTickets] = useState([])
+	const [employees, setEmployees] = useState([])
 	const { currentUser, loading, error } = useCurrentUser()
 	const [filteredTickets, setFilteredTickets] = useState([])
 	const [currentFilter, setCurrentFilter] = useState('All tickets')
@@ -47,6 +48,24 @@ export default function Tickets() {
 			}
 		}
 	}, [selectedTicketId, tickets])
+
+	const fetchEmployees = useCallback(async () => {
+		try {
+			const response = await fetch('http://localhost:5000/api/users')
+			if (!response.ok) {
+				throw new Error('Network response was not ok')
+			}
+			const data = await response.json()
+			setEmployees(data)
+		} catch (error) {
+			console.log(`Could not fetch employees: ${error}`)
+		}
+	}, [])
+
+	useEffect(() => {
+		fetchEmployees()
+	}, [fetchEmployees])
+
 	const fetchTickets = useCallback(async () => {
 		try {
 			const response = await fetch('http://localhost:5000/api/tickets')
@@ -104,14 +123,14 @@ export default function Tickets() {
 				break
 			case 'Unassigned tickets':
 				filtered = ticketsToFilter.filter(
-					(ticket) => ticket.agent === 'Unassigned'
+					(ticket) => ticket.assignedEmployeeId === ''
 				)
 				break
 			case 'My open tickets':
 				filtered = ticketsToFilter.filter(
 					(ticket) =>
-						ticket.agent.split(' ')[0] === currentUserFirstName &&
-						ticket.status === 'Open'
+						getAssignedEmployeeFirstName(ticket.assignedEmployeeId) ===
+							currentUserFirstName && ticket.status === 'Open'
 				)
 				break
 			case 'Open':
@@ -141,20 +160,17 @@ export default function Tickets() {
 		setFilteredTickets(filtered)
 	}
 
-	const parseTime = (message) => {
-		const timeValue = message.match(/\d+/)[0]
-		const timeUnit = message.match(/(seconds|minutes|hours|days)/)[0]
+	const formatTimeAgo = (timestamp) => {
 		const now = new Date()
-		if (timeUnit === 'seconds') {
-			return now - timeValue * 1000
-		} else if (timeUnit === 'minutes') {
-			return now - timeValue * 60 * 1000
-		} else if (timeUnit === 'hours') {
-			return now - timeValue * 60 * 60 * 1000
-		} else if (timeUnit === 'days') {
-			return now - timeValue * 24 * 60 * 60 * 1000
-		}
-		return now
+		const messageTime = new Date(timestamp * 1000)
+		const diffInSeconds = Math.floor((now - messageTime) / 1000)
+
+		if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`
+		if (diffInSeconds < 3600)
+			return `${Math.floor(diffInSeconds / 60)} minutes ago`
+		if (diffInSeconds < 86400)
+			return `${Math.floor(diffInSeconds / 3600)} hours ago`
+		return `${Math.floor(diffInSeconds / 86400)} days ago`
 	}
 
 	const handleSelectAll = () => {
@@ -189,12 +205,46 @@ export default function Tickets() {
 		const indexOfFirstItem = indexOfLastItem - itemsPerPage
 		return filteredTickets.slice(indexOfFirstItem, indexOfLastItem)
 	}
+
+	const getAssignedEmployeeFirstName = (employeeId) => {
+		const employee = employees.find((emp) => emp.id === employeeId)
+		return employee ? employee.name.split(' ')[0] : 'Unassigned'
+	}
+
+	const handleFilterChange = (filter) => {
+		setCurrentFilter(filter)
+		setCurrentPage(1)
+	}
+
+	const updateTicketInState = (updatedTicket) => {
+		setTickets((prevTickets) =>
+			prevTickets.map((ticket) =>
+				ticket.id === updatedTicket.id ? updatedTicket : ticket
+			)
+		)
+		// Also update the cache
+		if (ticketsCache.current) {
+			ticketsCache.current = ticketsCache.current.map((ticket) =>
+				ticket.id === updatedTicket.id ? updatedTicket : ticket
+			)
+			localStorage.setItem(
+				'cachedTickets',
+				JSON.stringify(ticketsCache.current)
+			)
+		}
+	}
+
+	useEffect(() => {
+		filterTickets(currentFilter)
+	}, [tickets, currentFilter])
+
 	return (
 		<div className="h-full max-h-[calc(100vh-100px)] overflow-auto rounded-tl-lg ">
 			{selectedTicket ? (
 				<TicketDetails
 					ticket={selectedTicket}
 					onClose={() => setSelectedTicket(null)}
+					updateTicket={updateTicketInState}
 				/>
 			) : (
 				<div className="flex bg-[#0066FF] bg-opacity-15 rounded-tl-lg h-full">
@@ -218,7 +268,7 @@ export default function Tickets() {
 												? 'bg-blue-100 text-blue-600'
 												: 'hover:text-blue-600'
 										}`}
-										onClick={() => setCurrentFilter(item)}
+										onClick={() => handleFilterChange(item)}
 									>
 										{item}
 									</div>
@@ -283,7 +333,7 @@ export default function Tickets() {
 											{ticket.subject}
 										</td>
 										<td className="py-3 text-sm font-semibold">
-											{ticket.agent}
+											{getAssignedEmployeeFirstName(ticket.assignedEmployeeId)}
 										</td>
 										<td className="py-3">
 											<span
@@ -294,11 +344,8 @@ export default function Tickets() {
 												{ticket.status}
 											</span>
 										</td>
-
 										<td className="py-3 text-sm font-semibold">
-											{ticket.lastMessage.split('\n').map((line, index) => (
-												<div key={index}>{line}</div>
-											))}
+											{formatTimeAgo(ticket.updatedAt._seconds)}
 										</td>
 									</tr>
 								))}

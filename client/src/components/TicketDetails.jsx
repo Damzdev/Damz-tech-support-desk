@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import userIcon from '../assets/tickets/User-icon.svg'
 import chevron from '../assets/users/chevron.svg'
 import search from '../assets/tickets/search-icon.svg'
-import dots from '../assets/tickets/menu-dots.svg'
+import burger from '../assets/tickets/burger-menu.svg'
 import {
 	FaBold,
 	FaItalic,
@@ -15,6 +15,9 @@ import {
 } from 'react-icons/fa'
 import { IoArrowBack } from 'react-icons/io5'
 import MessagesSkeleton from './MessagesSkeleton'
+import { Drawer, IconButton } from '@mui/material'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
+import useCurrentUser from '../hooks/useCurrentUser'
 
 const statusColors = {
 	Open: 'bg-blue-600',
@@ -22,13 +25,18 @@ const statusColors = {
 	Closed: 'bg-[#B3261E]',
 	'On Hold': 'bg-[#E97A14]',
 }
-export default function TicketDetails({ ticket, onClose }) {
+export default function TicketDetails({ ticket, onClose, updateTicket }) {
 	const [messages, setMessages] = useState([])
 	const [users, setUsers] = useState([])
 	const [employees, setEmployees] = useState([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [searchTerm, setSearchTerm] = useState('')
 	const [message, setMessage] = useState('')
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+	const [drawerOpen, setDrawerOpen] = useState(false)
+	const [statusMenuOpen, setStatusMenuOpen] = useState(false)
+	const [localTicket, setLocalTicket] = useState(ticket)
+	const { currentUser, loading, error } = useCurrentUser()
 	const editorRef = useRef(null)
 	const navigate = useNavigate()
 
@@ -72,13 +80,36 @@ export default function TicketDetails({ ticket, onClose }) {
 		document.execCommand(command, false, null)
 		editorRef.current.focus()
 	}
-
 	const handleFileUpload = (event) => {
 		const file = event.target.files[0]
 		// Implement file upload logic here
 		console.log(`Uploading file: ${file.name}`)
 	}
 
+	const handleAssignEmployee = async (employeeId) => {
+		try {
+			const response = await fetch(
+				`http://localhost:5000/api/tickets/agent/${ticket.id}`,
+				{
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ assignedEmployeeId: employeeId }),
+				}
+			)
+
+			if (response.ok) {
+				// Update the local ticket object
+				ticket.assignedEmployeeId = employeeId
+				setIsDropdownOpen(false)
+			} else {
+				console.error('Failed to update ticket')
+			}
+		} catch (error) {
+			console.error('Error updating ticket:', error)
+		}
+	}
 	const formatDate = (date) => {
 		const day = date.getDate()
 		const month = date.toLocaleString('default', { month: 'short' })
@@ -95,6 +126,12 @@ export default function TicketDetails({ ticket, onClose }) {
 		}
 
 		return `${getOrdinalSuffix(day)} ${month} ${year} at ${time}`
+	}
+
+	const formatAgentName = (employee) => {
+		if (!employee) return 'Unassigned'
+		const [firstName, lastName] = employee.name.split(' ')
+		return `${firstName}. ${lastName[0]}`
 	}
 
 	const getTimeAgo = (timestamp) => {
@@ -175,6 +212,81 @@ export default function TicketDetails({ ticket, onClose }) {
 		})
 	}
 
+	const handleStatusChange = async (newStatus) => {
+		try {
+			const response = await fetch(
+				`http://localhost:5000/api/tickets/status/${localTicket.id}`,
+				{
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ status: newStatus }),
+				}
+			)
+
+			if (response.ok) {
+				const updatedTicket = { ...localTicket, status: newStatus }
+				setLocalTicket(updatedTicket) // Update local state
+				updateTicket(updatedTicket) // Update parent component state
+				setStatusMenuOpen(false)
+				setDrawerOpen(false)
+			} else {
+				console.error('Failed to update ticket status')
+			}
+		} catch (error) {
+			console.error('Error updating ticket status:', error)
+		}
+	}
+
+	const handleSubmitAsSolved = async () => {
+		await handleStatusChange('Resolved')
+	}
+
+	const getAssignedEmployee = () => {
+		return employees.find((emp) => emp.id === ticket.assignedEmployeeId)
+	}
+
+	const sendMessage = async () => {
+		if (!message.trim()) return
+
+		try {
+			const response = await fetch(
+				`http://localhost:5000/api/tickets/${ticket.id}/messages`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						message: message.trim(),
+						senderId: currentUser.userId,
+					}),
+				}
+			)
+
+			if (response.ok) {
+				const result = await response.json()
+				setMessages((prevMessages) => {
+					if (prevMessages.length === 0) {
+						return [{ ticketId: ticket.id, messages: [result.newMessage] }]
+					}
+					const updatedMessages = [...prevMessages]
+					updatedMessages[0].messages.push(result.newMessage)
+					return updatedMessages
+				})
+				setMessage('')
+				if (editorRef.current) {
+					editorRef.current.innerHTML = ''
+				}
+			} else {
+				console.error('Failed to send message')
+			}
+		} catch (error) {
+			console.error('Error sending message:', error)
+		}
+	}
+
 	const date = new Date(ticket.createdAt._seconds * 1000)
 
 	return (
@@ -201,19 +313,38 @@ export default function TicketDetails({ ticket, onClose }) {
 						<img src={userIcon} alt="user-icon" className="w-10 h-10 mr-2" />
 						<div className="flex flex-col text-sm font-bold pr-12">
 							<span>Assigned to:</span>
-							<div className="flex items-center cursor-pointer">
-								<span className="text-blue-700">
-									{ticket.agent || 'Unassigned'}
-								</span>
-								<img src={chevron} alt="chevron" className="w-4 h-4 ml-2" />
+							<div className="relative">
+								<button
+									className="flex items-center cursor-pointer"
+									onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+								>
+									<span className="text-blue-700">
+										{formatAgentName(getAssignedEmployee())}
+									</span>
+									<img src={chevron} alt="chevron" className="w-4 h-4 ml-2" />
+								</button>
+
+								{isDropdownOpen && (
+									<div className="absolute z-10 mt-2 w-48 bg-[#D9D9D9] rounded-md shadow-lg">
+										{employees.map((employee) => (
+											<div
+												key={employee.id}
+												className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+												onClick={() => handleAssignEmployee(employee.id)}
+											>
+												{employee.name}
+											</div>
+										))}
+									</div>
+								)}
 							</div>
 						</div>
 						<span
 							className={`inline-block w-24 py-2 text-xs font-semibold text-center rounded-full ${
-								statusColors[ticket.status]
+								statusColors[localTicket.status]
 							} text-white`}
 						>
-							{ticket.status}
+							{localTicket.status}
 						</span>
 					</div>
 					<div className="flex items-center w-full justify-between p-8">
@@ -232,11 +363,9 @@ export default function TicketDetails({ ticket, onClose }) {
 								className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6"
 							/>
 						</div>
-						<img
-							src={dots}
-							alt=""
-							className="p-1 cursor-pointer rounded-lg right-0"
-						/>
+						<IconButton onClick={() => setDrawerOpen(true)}>
+							<MoreVertIcon />
+						</IconButton>
 					</div>
 				</div>
 
@@ -262,55 +391,144 @@ export default function TicketDetails({ ticket, onClose }) {
 						className="w-3/4 border-2 border-gray-300 bg-white rounded-lg shadow-lg px-4 py-2 focus:outline-none mb-2 min-h-[30px] overflow-auto"
 						onInput={handleInput}
 					/>
-					<div className="w-3/4 flex justify-start space-x-2 bg-gray-100 p-2 rounded-lg">
+					<div className="w-3/4 flex justify-between items-center">
+						<div className="flex space-x-2 bg-gray-100 p-2 rounded-lg">
+							<button
+								onClick={() => handleFormatting('bold')}
+								className="p-1 hover:bg-gray-200 rounded"
+							>
+								<FaBold />
+							</button>
+							<button
+								onClick={() => handleFormatting('italic')}
+								className="p-1 hover:bg-gray-200 rounded"
+							>
+								<FaItalic />
+							</button>
+							<button
+								onClick={() => handleFormatting('underline')}
+								className="p-1 hover:bg-gray-200 rounded"
+							>
+								<FaUnderline />
+							</button>
+							<button
+								onClick={() => handleFormatting('unordered-list')}
+								className="p-1 hover:bg-gray-200 rounded"
+							>
+								<FaListUl />
+							</button>
+							<button
+								onClick={() => handleFormatting('ordered-list')}
+								className="p-1 hover:bg-gray-200 rounded"
+							>
+								<FaListOl />
+							</button>
+							<button
+								onClick={() => handleFormatting('link')}
+								className="p-1 hover:bg-gray-200 rounded"
+							>
+								<FaLink />
+							</button>
+							<label className="p-1 hover:bg-gray-200 rounded cursor-pointer">
+								<FaImage />
+								<input
+									type="file"
+									className="hidden"
+									onChange={handleFileUpload}
+									accept="image/*"
+								/>
+							</label>
+						</div>
 						<button
-							onClick={() => handleFormatting('bold')}
-							className="p-1 hover:bg-gray-200 rounded"
+							onClick={sendMessage}
+							className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
 						>
-							<FaBold />
+							Send
 						</button>
-						<button
-							onClick={() => handleFormatting('italic')}
-							className="p-1 hover:bg-gray-200 rounded"
-						>
-							<FaItalic />
-						</button>
-						<button
-							onClick={() => handleFormatting('underline')}
-							className="p-1 hover:bg-gray-200 rounded"
-						>
-							<FaUnderline />
-						</button>
-						<button
-							onClick={() => handleFormatting('unordered-list')}
-							className="p-1 hover:bg-gray-200 rounded"
-						>
-							<FaListUl />
-						</button>
-						<button
-							onClick={() => handleFormatting('ordered-list')}
-							className="p-1 hover:bg-gray-200 rounded"
-						>
-							<FaListOl />
-						</button>
-						<button
-							onClick={() => handleFormatting('link')}
-							className="p-1 hover:bg-gray-200 rounded"
-						>
-							<FaLink />
-						</button>
-						<label className="p-1 hover:bg-gray-200 rounded cursor-pointer">
-							<FaImage />
-							<input
-								type="file"
-								className="hidden"
-								onChange={handleFileUpload}
-								accept="image/*"
-							/>
-						</label>
 					</div>
 				</div>
 			</div>
+			<Drawer
+				anchor="right"
+				open={drawerOpen}
+				onClose={() => setDrawerOpen(false)}
+			>
+				<div style={{ width: 400 }} className="flex flex-col h-full">
+					<div className="flex-grow">
+						<div class="bg-gray-200 w-full h-full p-6 rounded-md">
+							<div class="bg-blue-200 text-center p-2 rounded-md mb-6">
+								<span class="text-lg font-medium">Ticket #{ticket.id}</span>
+							</div>
+
+							<div class="mb-6">
+								<h3 class="text-lg font-semibold">Requester</h3>
+								<div class="flex items-center mt-2 p-3 bg-white rounded-md">
+									<div class="bg-blue-100 text-blue-500 font-bold w-8 h-8 rounded-full flex justify-center items-center">
+										{ticket.requester
+											.split(' ')
+											.map((name) => name[0])
+											.join('')}
+									</div>
+									<span class="ml-3 text-gray-800">{ticket.requester}</span>
+								</div>
+							</div>
+
+							<div class="mb-6">
+								<h3 class="text-lg font-semibold">Assigned Agent</h3>
+								<div class="flex items-center mt-2 p-3 bg-white rounded-md">
+									<div class="bg-blue-100 text-blue-500 font-bold w-8 h-8 rounded-full flex justify-center items-center">
+										{getAssignedEmployee()
+											?.name.split(' ')
+											.map((name) => name[0])
+											.join('') || 'UA'}
+									</div>
+									<span class="ml-3 text-gray-800">
+										{getAssignedEmployee()?.name || 'Unassigned'}
+									</span>
+								</div>
+							</div>
+
+							<div class="mb-6">
+								<h3 class="text-lg font-semibold">Email</h3>
+								<div class="mt-2 p-3 bg-white rounded-md">
+									<span class="text-gray-800">{ticket.email}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div className="flex justify-end p-4 bg-gray-200">
+						<button
+							onClick={handleSubmitAsSolved}
+							className="bg-[#0066FF] bg-opacity-15 mr-[2px] text-black font-semibold px-4 py-2 rounded-tl-md rounded-bl-md"
+						>
+							Submit as Solved
+						</button>
+						<div className="relative">
+							<button
+								onClick={() => setStatusMenuOpen(!statusMenuOpen)}
+								className="bg-[#0066FF] bg-opacity-15 p-2 rounded-tr-md rounded-br-md"
+							>
+								<img src={burger} alt="Menu" className="w-6 h-6" />
+							</button>
+							{statusMenuOpen && (
+								<div className="absolute bottom-full right-0 mb-2 bg-white border border-gray-300 rounded shadow-lg">
+									{['Open', 'On Hold', 'Resolved', 'Closed', 'Spam'].map(
+										(status) => (
+											<button
+												key={status}
+												onClick={() => handleStatusChange(status)}
+												className="block w-full text-left px-4 py-2 hover:bg-[#0066FF] hover:bg-opacity-15"
+											>
+												{status}
+											</button>
+										)
+									)}
+								</div>
+							)}
+						</div>
+					</div>
+				</div>
+			</Drawer>
 		</div>
 	)
 }

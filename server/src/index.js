@@ -1,9 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const dotenv = require('dotenv')
-const session = require('express-session')
 const cookieParser = require('cookie-parser')
-const bodyParser = require('body-parser')
 const dbRoutes = require('./routes/firestoreRoutes')
 const ticketRoutes = require('./routes/tickets')
 
@@ -15,7 +13,7 @@ app.use(cookieParser())
 
 app.use(
 	cors({
-		origin: ['http://localhost:5173' || 'http://localhost:5174'],
+		origin: true,
 		methods: ['POST', 'GET', 'PUT', 'DELETE'],
 		credentials: true,
 	})
