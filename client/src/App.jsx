@@ -6,6 +6,7 @@ import {
 	Navigate,
 } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { UserProvider } from './context/UserContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Layout from './components/Layout'
@@ -66,9 +67,11 @@ function AuthWrapper({ children }) {
 export default function App() {
 	return (
 		<AuthProvider>
-			<ActivityTracker />
-			<RouterProvider router={router} />
-			<InactivityWarning />
+			<UserProvider>
+				<ActivityTracker />
+				<RouterProvider router={router} />
+				<InactivityWarning />
+			</UserProvider>
 		</AuthProvider>
 	)
 }

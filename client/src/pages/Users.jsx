@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useContext } from 'react'
+import { UserContext } from '../context/UserContext'
 import SearchBar from '../components/SearchBar'
 import Pagination from '../components/Pagination'
 import trashIcon from '../assets/users/trashIcon.svg'
@@ -9,16 +10,31 @@ import calendar from '../assets/users/calendar.svg'
 import roleIcon from '../assets/users/roleIcon.svg'
 import chevron from '../assets/users/chevron.svg'
 import UserModal from '../components/userModal'
+import Snackbar from '@mui/material/Snackbar'
+import MuiAlert from '@mui/material/Alert'
+import { styled } from '@mui/material/styles'
 
 export default function Users() {
 	const [selectAll, setSelectAll] = useState(false)
 	const [selectedUsers, setSelectedUsers] = useState({})
+	const { employees, setEmployees } = useContext(UserContext)
 	const [users, setUsers] = useState([])
 	const [currentPage, setCurrentPage] = useState(1)
 	const [itemsPerPage, setItemsPerPage] = useState(10)
 	const [modalType, setModalType] = useState(null)
 	const [modalUser, setModalUser] = useState(null)
 	const [searchTerm, setSearchTerm] = useState('')
+	const [snackbar, setSnackbar] = useState({
+		open: false,
+		message: '',
+		severity: 'success',
+	})
+
+	useEffect(() => {
+		if (employees.length === 0) {
+			fetchUsers()
+		}
+	}, [employees])
 
 	const openModal = (type, user = null) => {
 		setModalType(type)
@@ -28,16 +44,6 @@ export default function Users() {
 	const closeModal = () => {
 		setModalType(null)
 		setModalUser(null)
-	}
-
-	const handleSave = async (user) => {
-		if (modalType === 'add') {
-			await handleAddUser(user)
-		} else if (modalType === 'edit') {
-			await handleUpdateUser(user)
-		}
-		closeModal()
-		fetchUsers()
 	}
 
 	useEffect(() => {
@@ -54,12 +60,21 @@ export default function Users() {
 			const response = await fetch('http://localhost:5000/api/users')
 			if (response.ok) {
 				const data = await response.json()
-				setUsers(data)
-				localStorage.setItem('cachedUsers', JSON.stringify(data))
+				setEmployees(data)
 			}
 		} catch (error) {
 			console.error('Error fetching users:', error)
 		}
+	}
+
+	const handleSave = async (user) => {
+		if (modalType === 'add') {
+			await handleAddUser(user)
+		} else if (modalType === 'edit') {
+			await handleUpdateUser(user)
+		}
+		closeModal()
+		fetchUsers()
 	}
 
 	const handleAddUser = async (user) => {
@@ -77,9 +92,11 @@ export default function Users() {
 
 			if (response.ok) {
 				fetchUsers()
+				showSnackbar('User added successfully!', 'success')
 			}
 		} catch (error) {
 			console.error('Error adding user:', error)
+			showSnackbar('Error adding user', 'error')
 		}
 	}
 
@@ -97,9 +114,11 @@ export default function Users() {
 			)
 			if (response.ok) {
 				console.log('User updated successfully')
+				showSnackbar('User updated successfully!', 'success')
 			}
 		} catch (error) {
 			console.error('Error updating user:', error)
+			showSnackbar('Error updating user', 'error')
 		}
 	}
 
@@ -114,9 +133,11 @@ export default function Users() {
 			if (response.ok) {
 				closeModal()
 				fetchUsers()
+				showSnackbar('User deleted successfully!', 'info')
 			}
 		} catch (error) {
 			console.error('Error deleting user:', error)
+			showSnackbar('Error deleting user', 'error')
 		}
 	}
 
@@ -138,19 +159,38 @@ export default function Users() {
 	}
 
 	const filteredUsers = useMemo(() => {
-		return users.filter(
+		return employees.filter(
 			(user) =>
 				user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				user.role.toLowerCase().includes(searchTerm.toLowerCase())
 		)
-	}, [searchTerm, users])
+	}, [searchTerm, employees])
 
 	const getCurrentPageItems = (items) => {
 		const indexOfLastItem = currentPage * itemsPerPage
 		const indexOfFirstItem = indexOfLastItem - itemsPerPage
 		return items.slice(indexOfFirstItem, indexOfLastItem)
 	}
+
+	const showSnackbar = (message, severity = 'success') => {
+		setSnackbar({ open: true, message, severity })
+	}
+
+	const handleSnackbarClose = (event, reason) => {
+		if (reason === 'clickaway') {
+			return
+		}
+		setSnackbar((prev) => ({ ...prev, open: false }))
+	}
+
+	const DarkAlert = styled(MuiAlert)(() => ({
+		color: '#fff',
+		backgroundColor: '#333',
+		'& .MuiAlert-icon': {
+			color: '#fff',
+		},
+	}))
 
 	return (
 		<div className="bg-black rounded-tl-lg h-full p-2 sm:p-4 lg:p-6 max-h-[calc(100vh-100px)] overflow-auto">
@@ -281,6 +321,20 @@ export default function Users() {
 				onSave={handleSave}
 				onDelete={handleDeleteUser}
 			/>
+			<Snackbar
+				open={snackbar.open}
+				autoHideDuration={5000}
+				onClose={handleSnackbarClose}
+				anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+			>
+				<DarkAlert
+					onClose={handleSnackbarClose}
+					severity={snackbar.severity}
+					sx={{ width: '100%' }}
+				>
+					{snackbar.message}
+				</DarkAlert>
+			</Snackbar>
 		</div>
 	)
 }

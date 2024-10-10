@@ -5,9 +5,11 @@ import TextField from '@mui/material/TextField'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
 
 const UserModal = ({ isOpen, onClose, modalType, user, onSave, onDelete }) => {
 	const [localUser, setLocalUser] = useState(user)
+	const [isLoading, setIsLoading] = useState(false)
 
 	useEffect(() => {
 		setLocalUser(user)
@@ -18,7 +20,11 @@ const UserModal = ({ isOpen, onClose, modalType, user, onSave, onDelete }) => {
 	}
 
 	const handleSubmit = () => {
-		onSave(localUser)
+		setIsLoading(true)
+		setTimeout(() => {
+			onSave(localUser)
+			setIsLoading(false)
+		}, 2000)
 	}
 
 	const modalStyle = {
@@ -135,8 +141,18 @@ const UserModal = ({ isOpen, onClose, modalType, user, onSave, onDelete }) => {
 							<MenuItem value="Junior Support">Junior Support</MenuItem>
 							<MenuItem value="Product Manager">Product Manager</MenuItem>
 						</Select>
-						<Button variant="contained" onClick={handleSubmit}>
-							{modalType === 'add' ? 'Add User' : 'Save Changes'}
+						<Button
+							variant="contained"
+							onClick={handleSubmit}
+							disabled={isLoading}
+						>
+							{isLoading ? (
+								<CircularProgress size={24} color="primary" />
+							) : modalType === 'add' ? (
+								'Add User'
+							) : (
+								'Save Changes'
+							)}
 						</Button>
 					</>
 				) : (
@@ -148,11 +164,23 @@ const UserModal = ({ isOpen, onClose, modalType, user, onSave, onDelete }) => {
 							<strong>Role:</strong> {localUser.role}
 						</p>
 						<div className="mt-4 flex justify-end">
-							<Button onClick={onClose} sx={{ mr: 2, color: '#FFFFFF' }}>
-								Cancel
-							</Button>
-							<Button variant="contained" color="error" onClick={onDelete}>
-								Delete
+							<Button
+								variant="contained"
+								color="error"
+								onClick={() => {
+									setIsLoading(true)
+									setTimeout(() => {
+										onDelete()
+										setIsLoading(false)
+									}, 2000)
+								}}
+								disabled={isLoading}
+							>
+								{isLoading ? (
+									<CircularProgress size={24} color="primary" />
+								) : (
+									'Delete'
+								)}
 							</Button>
 						</div>
 					</>

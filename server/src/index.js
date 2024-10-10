@@ -4,6 +4,8 @@ const dotenv = require('dotenv')
 const cookieParser = require('cookie-parser')
 const dbRoutes = require('./routes/firestoreRoutes')
 const ticketRoutes = require('./routes/tickets')
+const orderRoutes = require('./routes/orders')
+const productRoutes = require('./routes/products')
 
 dotenv.config()
 
@@ -18,9 +20,10 @@ app.use(
 		credentials: true,
 	})
 )
+
 app.use(express.json())
 
-app.use('/api', dbRoutes, ticketRoutes)
+app.use('/api', dbRoutes, ticketRoutes, orderRoutes, productRoutes)
 
 app.get('/', (req, res) => {
 	res.send('Support Help Desk API is running')

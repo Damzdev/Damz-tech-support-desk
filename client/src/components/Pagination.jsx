@@ -33,6 +33,13 @@ const Pagination = ({
 		}
 	}, [])
 
+	useEffect(() => {
+		const maxPage = Math.ceil(totalItems / itemsPerPage)
+		if (currentPage > maxPage) {
+			onPageChange(Math.max(1, maxPage))
+		}
+	}, [totalItems, itemsPerPage, currentPage, onPageChange])
+
 	const goToPage = (page) => {
 		onPageChange(Math.min(Math.max(1, page), totalPages))
 	}
@@ -41,6 +48,13 @@ const Pagination = ({
 	const prevPage = () => goToPage(currentPage - 1)
 	const firstPage = () => goToPage(1)
 	const lastPage = () => goToPage(totalPages)
+	const jumpPages = (direction) => {
+		const newPage =
+			direction === 'forward'
+				? Math.min(currentPage + 3, totalPages)
+				: Math.max(currentPage - 3, 1)
+		onPageChange(newPage)
+	}
 
 	return (
 		<div
@@ -115,7 +129,12 @@ const Pagination = ({
 					.map((page, index, array) => (
 						<React.Fragment key={page}>
 							{index > 0 && array[index - 1] !== page - 1 && (
-								<button className="text-[#999999] mx-2 hover:text-white font-semibold">
+								<button
+									className="text-[#999999] mx-2 hover:text-white font-semibold"
+									onClick={() =>
+										jumpPages(index === 1 ? 'backward' : 'forward')
+									}
+								>
 									...
 								</button>
 							)}

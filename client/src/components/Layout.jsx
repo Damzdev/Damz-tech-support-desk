@@ -45,7 +45,7 @@ export default function Layout() {
 	return (
 		<div className="flex flex-col h-screen overflow-hidden">
 			<header className="bg-white flex-shrink-0">
-				<div className="mx-auto py-4 px-10 flex justify-between items-center">
+				<div className="mx-auto py-4 pl-0 px-10 flex justify-between items-center">
 					<img
 						src={logo}
 						alt="Logo"
